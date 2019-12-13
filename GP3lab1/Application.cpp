@@ -346,7 +346,7 @@ void Application::GameInit()
 	#pragma region load resources
 	//loading all resources
 	Resources::GetInstance()->AddModel("cube.obj");
-	Resources::GetInstance()->AddModel("capsule.obj");
+	Resources::GetInstance()->AddModel("sphere.obj");
 	Resources::GetInstance()->AddModel("man.obj");
 	Resources::GetInstance()->AddModel("xyzOBJ.obj");
 	Resources::GetInstance()->AddTexture("Wood.jpg");
@@ -416,13 +416,14 @@ void Application::GameInit()
 	{
 		Entity* a = new Entity();
 		m_entities.push_back(a);
-		a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("capsule.obj"), Resources::GetInstance()->GetShader("ADS"), Resources::GetInstance()->GetTexture("Wood.jpg"),1));
+		a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("ADS"), Resources::GetInstance()->GetTexture("Wood.jpg"),1));
 		a->GetTransform()->SetPosition(glm::vec3(0, 5.f * i, -18.f));
 		a->AddComponent<RigidBody>();
 		a->GetComponent<RigidBody>()->Init(new CapsuleShape(1.f, 2.5f));//new SphereShape(1.f)); //BoxShape(glm::vec3(1.f,1.f, 1.f))); // 
 		a->GetComponent<RigidBody>()->Get()->setMassProps(1.f, btVector3(1.0f, 1.0f, 1.0f));
 		//a->GetComponent<RigidBody>()->Get()->setAngularVelocity(btVector3(2.0f, 1.0f, 3.0f));
 		a->GetTransform()->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+		a->GetComponent<RigidBody>()->Get()->setRestitution(1);
 		//a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
 	}
 
