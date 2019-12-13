@@ -13,9 +13,12 @@ private:
 public:
 	virtual void OnUpdate(float deltaTime) override;
 	virtual void OnRender() override;
+	virtual void OnAttach() override;
+
 	void Init(CollisionShape* shape, float mass = 1.f, const glm::vec3 localInertia = glm::vec3(1));
 	virtual void UpdateParent();
 	virtual void UpdateRigidBody();
 	virtual void AddForce(glm::vec3 force);
 	btRigidBody* Get() { return m_rigidBody; }
+	void RemoveIntertia();
 };

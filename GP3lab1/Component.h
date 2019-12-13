@@ -11,4 +11,6 @@ protected:
 public:
 	virtual void OnUpdate(float deltaTime) = 0;
 	virtual void OnRender() = 0;
-};
+	virtual void OnAttach() = 0;
+};
+

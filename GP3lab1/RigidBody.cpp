@@ -10,6 +10,11 @@ void RigidBody::OnUpdate(float deltaTime)
 void RigidBody::OnRender()
 {
 }
+
+void RigidBody::OnAttach()
+{
+}
+
 void RigidBody::Init(CollisionShape* shape, float mass, const glm::vec3 localInertia)
 {
 	btTransform bT = Physics::ConvertTransformToBtTransform(*m_entity->GetTransform());
@@ -27,6 +32,7 @@ void RigidBody::UpdateParent()
 {
 	btTransform* newPos = &m_rigidBody->getWorldTransform();
 	m_entity->GetTransform()->SetPosition(glm::vec3((float)newPos->getOrigin().getX(), (float)newPos->getOrigin().getY(), (float)newPos->getOrigin().getZ()));
+	m_entity->GetTransform()->SetRotation(glm::quat(newPos->getRotation().getW(), newPos->getRotation().getX(), newPos->getRotation().getY(), newPos->getRotation().getZ()));
 }
 
 void RigidBody::UpdateRigidBody()
@@ -41,4 +47,9 @@ void RigidBody::AddForce(glm::vec3 force) // this is horrible and needs to be re
 	btVector3 tempVec = btVector3(0, 0, 0); // m_entity->GetTransform()->GetPosition().x, m_entity->GetTransform()->GetPosition().y, m_entity->GetTransform()->GetPosition().z);
 	btVector3* tempPoint = &tempVec;
 	m_rigidBody->applyForce(btVector3(force.x, force.y, force.z), *tempPoint);
+}
+
+void RigidBody::RemoveIntertia()
+{
+	m_rigidBody->setLinearVelocity(btVector3(0, 0, 0));
 }

@@ -3,6 +3,7 @@
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<int> indices)
 {
+
 	m_indices = indices;
 	m_vertices = vertices;
 	//generate and bind vao so that it keeps the current vbo and ebo and attribs

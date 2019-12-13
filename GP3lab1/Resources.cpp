@@ -51,16 +51,24 @@ std::shared_ptr<Texture> Resources::GetTexture(const std::string& name)
 
 void Resources::ReleaseResources()
 {
+
+	// m_models.r;
+	  
+	// not needed be because of shared pointeres boiiiiiiiii
+
 	/*
 	//using an iterator pattern to iterate through all elements
 	for (auto iter = m_models.begin(); iter != m_models.end(); iter++)
 		delete iter->second;
+
 
 	for (auto iter = m_shaderPrograms.begin(); iter != m_shaderPrograms.end(); iter++)
 		delete iter->second;
 
 	for (auto iter = m_textures.begin(); iter != m_textures.end(); iter++)
 		delete iter->second;
-		std::shared_ptr<Model>
-		*/
+
+	//	std::shared_ptr<Model>
+	*/
+		
 }

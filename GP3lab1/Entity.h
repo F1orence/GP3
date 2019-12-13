@@ -17,6 +17,7 @@ public:
 	template<class T> T* GetComponent();
 	void OnUpdate(float deltaTime);
 	void OnRender();
+	void OnRender(int type);
 	Transform* GetTransform() { return m_transform; };
 };
 

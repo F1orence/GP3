@@ -6,12 +6,16 @@
 void CameraComp::OnUpdate(float deltaTime)
 {
 }
+
 void CameraComp::OnRender()
 {
 }
-void CameraComp::Start()
+
+
+void CameraComp::OnAttach()
 {
 	m_camera = new Camera(m_entity->GetTransform());
+
 	if (Application::GetInstance()->GetCamera() == nullptr)
 	{
 		Application::GetInstance()->SetCamera(m_camera);

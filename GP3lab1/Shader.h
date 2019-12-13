@@ -15,7 +15,6 @@ public:
 	~Shader();
 	GLuint Get() { return m_shader; }
 	GLuint LoadShaderFromMemory(const char* pMem, SHADER_TYPE type);
-	GLuint LoadShaderFromFile(const std::string& fileName, SHADER_TYPE
-		type);
+	GLuint LoadShaderFromFile(const std::string& fileName, SHADER_TYPE type);
 	bool CheckForCompileErrors(const std::string& fileName);
-};
+};

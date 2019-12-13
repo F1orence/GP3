@@ -39,11 +39,15 @@ bool Input::GetKey(SDL_Keycode key)
 		return m_state.keys[index];
 	}
 	else return false;
-}bool Input::LeftMousePressed(SDL_MouseButtonEvent& button) 
+}
+
+bool Input::LeftMousePressed(SDL_MouseButtonEvent& button) 
 {
 	return button.button == SDL_BUTTON_LEFT;
-}bool Input::LeftMouseReleased(SDL_MouseButtonEvent& button)
+}
+
+bool Input::LeftMouseReleased(SDL_MouseButtonEvent& button)
 {
 	return button.button == SDL_BUTTON_LEFT;
 
-}
+}

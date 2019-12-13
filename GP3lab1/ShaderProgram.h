@@ -10,8 +10,7 @@ private:
 	Shader* m_vShader, * m_fShader;
 	bool CheckForLinkErrors();
 public:
-	ShaderProgram(const std::string& vShaderFile, const std::string&
-		fShaderFile);
+	ShaderProgram(const std::string& vShaderFile, const std::string& fShaderFile);
 	~ShaderProgram();
 	void BindAttribLoc(GLuint loc, const char* name);
 	void Link();

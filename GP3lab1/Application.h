@@ -32,8 +32,11 @@ private:
 	AppState m_appState = AppState::INITILISING;
 	float m_worldDeltaTime = 0.f;
 
+	GLuint currVAO;
+
 	bool mouseSet, lookEnabled;
 	glm::vec3 lightDir, lightCol = glm::vec3(0.5f,0.5f,0.5f);
+	glm::mat4 m_uiVP;
 
 	std::vector<Entity*> m_entities, m_UIentities;
 	Camera* m_mainCamera = nullptr;
@@ -65,6 +68,7 @@ public:
 	inline Camera* GetCamera() { return m_mainCamera; }
 	inline glm::vec3 GetMainLight() { return lightDir; }
 	inline glm::vec3 GetAmbientColour() { return lightCol; }
+	inline glm::mat4 GetUICam() { return m_uiVP; }
 	void SetCamera(Camera* camera);
 
 };

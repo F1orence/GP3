@@ -14,4 +14,4 @@ public:
 	Texture(std::string path);
 	void Bind();
 	GLuint m_GLuint; // this possibly should not exist
-};
+};

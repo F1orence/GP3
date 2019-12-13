@@ -7,6 +7,7 @@
 #include "Physics.h"
 #include "BoxShape.h"
 #include "SphereShape.h"
+#include "CapsuleShape.h"
 #include "RigidBody.h"
 
 
@@ -29,12 +30,9 @@ void Application::Init()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 	//setting openGL context to core, not compatibility
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-		SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	//creating window
-	m_window = SDL_CreateWindow("I was named by the application class", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight,
-		SDL_WINDOW_OPENGL);
+	m_window = SDL_CreateWindow("I was named by the application class", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight, SDL_WINDOW_OPENGL);
 
 	SDL_CaptureMouse(SDL_TRUE);
 	//SDL_ShowCursor(SDL_DISABLE);
@@ -46,33 +44,7 @@ void Application::Init()
 	baseMousePos = INPUT->GetMousePos();
 	oldMousePos = glm::vec2(0, 0);
 
-
-
-#pragma region making a plane I think?
-	Entity * a = new Entity();
-	m_entities.push_back(a);
-	a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("cube.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("Wood.jpg")));
-	MeshRenderer* m = a->GetComponent<MeshRenderer>();
-	a->GetTransform()->SetPosition(glm::vec3(0, -100.f, -20.f));
-	a->AddComponent<RigidBody>();
-	a->GetComponent<RigidBody>()->Init(new BoxShape(glm::vec3(100.f, 1.f,100.f)));
-	a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
-	a->GetComponent<RigidBody>()->Get()->setMassProps(0, btVector3());
-	a->GetTransform()->SetScale(glm::vec3(100.f, 1.f, 100.f));
-	for (int i = 0; i < 5; i++)
-	{
-		Entity* a = new Entity();
-		m_entities.push_back(a);
-		a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("cube.obj"),Resources::GetInstance()->GetShader("ADS"),Resources::GetInstance()->GetTexture("Wood.jpg")));
-		a->GetTransform()->SetPosition(glm::vec3(0, 5.f * i, -18.f));
-		a->AddComponent<RigidBody>();
-		a->GetComponent<RigidBody>()->Init(new SphereShape(1.f)); // new BoxShape(glm::vec3(1.f,1.f, 1.f))); // 
-		a->GetComponent<RigidBody>()->Get()->setMassProps(1.f, btVector3());
-		a->GetTransform()->SetScale(glm::vec3(1.f, 1.f, 1.f));
-		a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
-	}
-
-#pragma endregion
+	m_uiVP = GetCamera()->Get();
 
 }
 
@@ -215,6 +187,8 @@ void Application::Loop()
 		if (INPUT->GetKey(SDLK_q))
 		{
 			m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(-1, glm::vec3(0, 1, 0));
+			//m_uiVP = GetCamera()->Get();
+			m_entities[3]->GetTransform()->LookAt(m_entities[1]->GetTransform()->GetPosition());
 		}
 
 		
@@ -288,6 +262,19 @@ void Application::Loop()
 			debugMode = DEBUG_HIDE_ALL;
 		}
 
+
+		if (INPUT->GetKey(SDLK_g))
+		{
+			m_entities[6]->GetComponent<RigidBody>()->RemoveIntertia();
+			m_entities[6]->GetTransform()->SetPosition(m_entities[EntityEnums::CAM]->GetTransform()->GetPosition());
+			m_entities[6]->GetComponent<RigidBody>()->AddForce(m_entities[EntityEnums::CAM]->GetTransform()->GetForward() * glm::vec3(1200));
+		}
+
+		//glm::vec3 dir = m_entities[3]->GetTransform()->GetPosition - m_entities[3]->GetTransform()->GetPosition();
+		//glm::normalize(dir);
+		//glm::quat rot = glm::RotationBetweenVectors(vec3(0.0f, 0.0f, 1.0f), dir);
+		//m_entities[3]->GetTransform()->SetRotation(glm::lookAt)
+
 		
 		auto currentTicks = std::chrono::high_resolution_clock::now();
 		float deltaTime = (float)std::chrono::duration_cast<std::chrono::microseconds>(currentTicks - prevTicks).count() / 100000;
@@ -301,14 +288,21 @@ void Application::Loop()
 
 		lightDir = m_entities[DIR_LIGHT]->GetTransform()->GetRight();
 
-		m_entities.at(3)->GetTransform()->LookAt(m_entities[EntityEnums::CAM]->GetTransform()->GetPosition()); // this is a thing that maybe should not be
+		//m_entities.at(3)->GetTransform()->LookAt(m_entities[EntityEnums::CAM]->GetTransform()->GetPosition()); // this is a thing that maybe should not be
 
-		//glm::vec4 test4 = m_entities.at(3)->GetComponent<MeshRenderer>()->GetMVP() * glm::vec4(m_entities.at(3)->GetTransform()->GetPosition(), 1);
-		glm::vec4 test4 = m_mainCamera->Get() * glm::vec4(m_entities.at(3)->GetTransform()->GetPosition(), 1);
+		glm::vec4 test4 = m_entities.at(3)->GetComponent<MeshRenderer>()->GetMVP() * glm::vec4(m_entities.at(3)->GetTransform()->GetPosition(), 1);
+		//glm::vec4 test4 = m_mainCamera->Get() * glm::vec4(m_entities.at(3)->GetTransform()->GetPosition(), 1);
 		//glm::vec3 test4 = glm::project(m_entities.at(3)->GetTransform()->GetPosition(), m_entities.at(3)->GetTransform()->GetTransformationMatrix(), GetCamera()->Get(), glViewport);
 		glm::vec2 test = glm::vec2(test4.x, test4.y);
 
-		std::cout << test.x << "," << test.y << std::endl;
+		//std::cout << test.x << "," << test.y << std::endl;
+
+		//New test
+		glm::mat4 M = m_entities.at(3)->GetTransform()->GetTransformationMatrix();
+		glm::mat4 V = m_mainCamera->GetView();
+		glm::mat4 P = m_mainCamera->GetProj();
+		std::cout << M[1][1] << std::endl;
+
 
 		Update(deltaTime);
 		Render();
@@ -329,6 +323,7 @@ void Application::Quit()
 	SDL_GL_DeleteContext(m_glContext);
 	SDL_DestroyWindow(m_window);
 	SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
+	//Resources::GetInstance
 	SDL_Quit();
 }
 
@@ -351,6 +346,7 @@ void Application::GameInit()
 	#pragma region load resources
 	//loading all resources
 	Resources::GetInstance()->AddModel("cube.obj");
+	Resources::GetInstance()->AddModel("capsule.obj");
 	Resources::GetInstance()->AddModel("man.obj");
 	Resources::GetInstance()->AddModel("xyzOBJ.obj");
 	Resources::GetInstance()->AddTexture("Wood.jpg");
@@ -359,13 +355,14 @@ void Application::GameInit()
 	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "simple_FRAG.glsl"),"simple");
 	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "inverted_FRAG.glsl"), "inverted");
 	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "normals_VERT.glsl", ASSET_PATH + "ADS_FRAG.glsl"), "ADS");
-	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "UI_VERT.glsl", ASSET_PATH + "UI_FRAG.glsl"), "UI");
+	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "UI_FRAG.glsl"), "UI");
 	#pragma endregion
 
-	#pragma region
+	#pragma region add stuff
 	m_UIentities.push_back(new Entity());
-	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("UI"), Resources::GetInstance()->GetTexture("testText3.png")));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(101, 0, 10));
+	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("UI"), Resources::GetInstance()->GetTexture("testText3.png"), 2));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 1));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(50.2f, 50.2f, 50.2f));
 
 	m_UIentities.push_back(new Entity());
 	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("xyzOBJ.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("pixels.jpg")));
@@ -380,7 +377,8 @@ void Application::GameInit()
 	m_entities.push_back(new Entity()); // --------!---------THIS COULD BE IN WRONG PLACE --------!--------!-------
 	CameraComp* cc = new CameraComp();
 	m_entities.at(m_entities.size() - 1)->AddComponent(cc);
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 100));
+	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 101));
+ 
 
 	m_entities.push_back(new Entity()); // Light
 	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("man.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("pixels.jpg")));
@@ -390,14 +388,50 @@ void Application::GameInit()
 
 	m_entities.push_back(new Entity());
 	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
-	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("man.obj"), Resources::GetInstance()->GetShader("ADS"),Resources::GetInstance()->GetTexture("Wood.jpg")));
+	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("man.obj"), Resources::GetInstance()->GetShader("ADS"), Resources::GetInstance()->GetTexture("Wood.jpg"), 1));
+	m_entities.at(m_entities.size() - 1)->GetTransform()->SetScale(glm::vec3(1.f, 1.f, 1.f));
+
+
+	m_entities.push_back(new Entity());
+	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
+	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("cube.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("pixels.jpg"), 1));
+	m_entities.at(m_entities.size() - 1)->AddComponent<RigidBody>();
+	m_entities.at(m_entities.size() - 1)->GetComponent<RigidBody>()->Init(new SphereShape(1.f));
+	m_entities.at(m_entities.size() - 1)->GetComponent<RigidBody>()->Get()->setMassProps(10, btVector3());
 
 	//m_entities.at(2)->AddComponent(new Entity());
 
+#pragma region adding physics objects
+	Entity* a = new Entity();
+	m_entities.push_back(a);
+	a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("cube.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("Wood.jpg")));
+	MeshRenderer* m = a->GetComponent<MeshRenderer>();
+	a->GetTransform()->SetPosition(glm::vec3(0, -100.f, -20.f));
+	a->AddComponent<RigidBody>();
+	a->GetComponent<RigidBody>()->Init(new BoxShape(glm::vec3(100.f, 1.f, 101.f)));
+	a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
+	a->GetComponent<RigidBody>()->Get()->setMassProps(0, btVector3(1.f,1.f,1.f));
+	a->GetTransform()->SetScale(glm::vec3(100.f, 1.f, 100.f));
+	for (int i = 0; i < 50; i++)
+	{
+		Entity* a = new Entity();
+		m_entities.push_back(a);
+		a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("capsule.obj"), Resources::GetInstance()->GetShader("ADS"), Resources::GetInstance()->GetTexture("Wood.jpg"),1));
+		a->GetTransform()->SetPosition(glm::vec3(0, 5.f * i, -18.f));
+		a->AddComponent<RigidBody>();
+		a->GetComponent<RigidBody>()->Init(new CapsuleShape(1.f, 2.5f));//new SphereShape(1.f)); //BoxShape(glm::vec3(1.f,1.f, 1.f))); // 
+		a->GetComponent<RigidBody>()->Get()->setMassProps(1.f, btVector3(1.0f, 1.0f, 1.0f));
+		//a->GetComponent<RigidBody>()->Get()->setAngularVelocity(btVector3(2.0f, 1.0f, 3.0f));
+		a->GetTransform()->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
+		//a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
+	}
+
+
+#pragma endregion
+#pragma endregion
+
 	deltaMousePos = INPUT->GetMousePos(); // may not be required
 	oldMousePos = INPUT->GetMousePos();
-
-	cc->Start();
 
 }
 

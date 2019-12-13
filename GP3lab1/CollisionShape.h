@@ -3,7 +3,7 @@
 
 enum CShapeType
 {
-	BOX, SPHERE, CAPSULE, CYLINDER, CONE
+	BOX, SPHERE, CAPSULE, CYLINDER
 };
 
 class CollisionShape

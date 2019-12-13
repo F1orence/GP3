@@ -9,6 +9,7 @@ Entity::Entity()
 void Entity::AddComponent(Component* c)
 {
 	c->m_entity = this;
+	c->OnAttach();
 	m_components.push_back(c);
 }
 
@@ -26,4 +27,5 @@ void Entity::OnRender()
 	{
 		c->OnRender();
 	}
-}
+}
+
