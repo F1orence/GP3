@@ -53,7 +53,9 @@ void Texture::Bind()
 	glBindTexture(GL_TEXTURE_2D, m_texture);
 }
 
-//Texture::m_GLuint
-//{
-//	return *texture;
-//}
+Texture::~Texture()
+{
+	glDeleteTextures(1, &m_texture);
+}
+
+

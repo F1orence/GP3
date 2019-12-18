@@ -197,6 +197,7 @@ xcopy "$(SolutionDir)assets" "$(OutDir)assets" /Y /I</Command>
     <ClCompile Include="CameraComp.cpp" />
     <ClCompile Include="CapsuleShape.cpp" />
     <ClCompile Include="CollisionShape.cpp" />
+    <ClCompile Include="CylinderShape.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="GP3lab1.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -207,6 +208,7 @@ xcopy "$(SolutionDir)assets" "$(OutDir)assets" /Y /I</Command>
     <ClCompile Include="Physics.cpp" />
     <ClCompile Include="Resources.cpp" />
     <ClCompile Include="RigidBody.cpp" />
+    <ClCompile Include="SceneLoader.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="SphereShape.cpp" />
@@ -222,6 +224,7 @@ xcopy "$(SolutionDir)assets" "$(OutDir)assets" /Y /I</Command>
     <ClInclude Include="CollisionShape.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
+    <ClInclude Include="CylinderShape.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputState.h" />
@@ -234,6 +237,7 @@ xcopy "$(SolutionDir)assets" "$(OutDir)assets" /Y /I</Command>
     <ClInclude Include="Quad.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="RigidBody.h" />
+    <ClInclude Include="SceneLoader.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="SphereShape.h" />

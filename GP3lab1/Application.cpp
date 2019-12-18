@@ -8,7 +8,9 @@
 #include "BoxShape.h"
 #include "SphereShape.h"
 #include "CapsuleShape.h"
+#include "CylinderShape.h"
 #include "RigidBody.h"
+
 
 
 Application* Application::m_application = nullptr;
@@ -40,11 +42,19 @@ void Application::Init()
 	OpenGlInit();
 	GameInit();
 
-	//SDL_WarpMouseInWindow(NULL, m_windowWidth / 2, m_windowHeight / 2);
+	SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, m_windowHeight / 2);
+	INPUT->ResetMouse();
 	baseMousePos = INPUT->GetMousePos();
 	oldMousePos = glm::vec2(0, 0);
 
+	m_mainCamera->Recalculate();
+
 	m_uiVP = GetCamera()->Get();
+
+	m_UIentities[0]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() + (m_camEntity->GetTransform()->GetForward() * glm::vec3(4)));
+	m_UIentities[0]->GetTransform()->SetRotation(m_camEntity->GetTransform()->GetRotation());
+
+	//m_sceneLoader = new SceneLoader;
 
 }
 
@@ -66,7 +76,7 @@ void Application::OpenGlInit()
 	
 
 	//Smooth shading
-	GL_ATTEMPT(glShadeModel(GL_SMOOTH));
+	//GL_ATTEMPT(glShadeModel(GL_SMOOTH));
 	//enable depth testing
 	GL_ATTEMPT(glEnable(GL_DEPTH_TEST));
 	//set less or equal func for depth testing
@@ -79,16 +89,52 @@ void Application::OpenGlInit()
 	GL_ATTEMPT(glCullFace(GL_BACK));
 	glViewport(0, 0, (GLsizei)m_windowWidth, (GLsizei)m_windowHeight);
 
-
 }
 
 void Application::Loop()
 {
+	
+
 	m_appState = AppState::RUNNING;
 	auto prevTicks = std::chrono::high_resolution_clock::now();
 	SDL_Event event;
 	while (m_appState != AppState::QUITTING)
 	{
+		/*
+		if (mouseSet)
+		{
+			switch (mouseInt)
+			{
+			case(0):
+			{
+				//SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, m_windowHeight / 2);
+				INPUT->MoveMouse(glm::vec2(-50, 0));
+			}
+			break;
+
+			case(1):
+			{
+				INPUT->MoveMouse(glm::vec2(50, 0));
+			}
+			break;
+
+			case(2):
+			{
+				INPUT->MoveMouse(glm::vec2(0, 50));
+			}
+			break;
+
+			case(3):
+			{
+				INPUT->MoveMouse(glm::vec2(0, -50));
+			}
+			break;
+			}
+
+			mouseSet = false;
+		}
+		*/
+
 		//poll SDL events
 		while (SDL_PollEvent(&event))
 		{
@@ -110,140 +156,119 @@ void Application::Loop()
 
 				case SDL_MOUSEMOTION:
 					{	
-
 						INPUT->MoveMouse(glm::ivec2(event.motion.xrel, event.motion.yrel));
 
+						//deltaMousePos = INPUT->GetMousePos + baseMousePos;//INPUT->set
+
+						/*
+						if (INPUT->GetMousePos().x < mouseConstraints.z)
+						{
+							//INPUT->MoveMouse(glm::vec2(50,0));
+							//SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, (m_windowHeight / 2) + mouseConstraints.y - 50 + INPUT->GetMousePos().y); // 2);
+							SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, (m_windowHeight / 2) + INPUT->GetMousePos().y - (mouseConstraints.y - 50));
+							
+							mouseConstraints.z -= 50;
+							mouseConstraints.x -= 50;
+							mouseSet = true; // INPUT->MoveMouse(glm::vec2(-50, 0));
+							mouseInt = 0;
+						}
+
+						if (INPUT->GetMousePos().x > mouseConstraints.x)
+						{
+							//INPUT->MoveMouse(glm::vec2(50,0));
+							SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, (m_windowHeight / 2) + mouseConstraints.y - 50 + INPUT->GetMousePos().y);
+							mouseConstraints.z += 50;
+							mouseConstraints.x += 50;
+							mouseSet = true; // INPUT->MoveMouse(glm::vec2(50, 0));
+							mouseInt = 1;
+						}
+
+						if (INPUT->GetMousePos().y > mouseConstraints.y)
+						{
+							//INPUT->MoveMouse(glm::vec2(50,0));
+							SDL_WarpMouseInWindow(m_window, (m_windowWidth / 2) + mouseConstraints.x - 50 + INPUT->GetMousePos().x, m_windowHeight / 2);
+							mouseConstraints.y += 50;
+							mouseConstraints.w += 50;
+							mouseSet = true; //INPUT->MoveMouse(glm::vec2(0, 50));
+							mouseInt = 2;
+						}
+
+						if (INPUT->GetMousePos().y < mouseConstraints.w)
+						{
+							//INPUT->MoveMouse(glm::vec2(50,0));
+							SDL_WarpMouseInWindow(m_window, (m_windowWidth / 2) + mouseConstraints.x - 50 + INPUT->GetMousePos().x, m_windowHeight / 2);
+							mouseConstraints.y -= 50;
+							mouseConstraints.w -= 50;
+							mouseSet = true; // INPUT->MoveMouse(glm::vec2(0, -50));
+							mouseInt = 3;
+						}
+
+
 						//std::cout << event.motion.xrel << std::endl;
+						*/
 
 					}
 					break;
 
 				case SDL_MOUSEBUTTONDOWN: // https://stackoverflow.com/questions/35165716/sdl-mouse-click
 				{
-					if (INPUT->LeftMousePressed(event.button))
+					if (INPUT->RightMousePressed(event.button))
 					{
 						lookEnabled = true;
-						//SDL_ShowCursor(SDL_DISABLE);
+						SDL_ShowCursor(SDL_DISABLE);
 						//SDL_WarpMouseInWindow(NULL, m_windowWidth / 2, m_windowHeight / 2);
 						oldMousePos = INPUT->GetMousePos();
+
+						m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("selectionText1.png"));
 					}
+
+					if (INPUT->LeftMousePressed(event.button))
+					{
+						if (m_targetEntity != NULL & lookEnabled)
+						{
+							m_currEntity = m_targetEntity;
+						}
+						else
+						{
+							isPossessing = false;
+							m_currEntity = NULL;
+							m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("mainText1.png"));
+							m_transformSelection = TransformStates::NONE;
+							selectionCol = glm::vec4(0.9f, 0.9f, 0.9f, 0.6f);
+
+						}
+					}
+					
 				}
 				break;
 
 				case SDL_MOUSEBUTTONUP: // https://stackoverflow.com/questions/35165716/sdl-mouse-click
 				{
-					if (INPUT->LeftMousePressed(event.button))
+					if (INPUT->RightMousePressed(event.button))
 					{
-						//SDL_ShowCursor(SDL_ENABLE);
+						SDL_ShowCursor(SDL_ENABLE);
 						lookEnabled = false;
+
+						if (m_currEntity == NULL)
+						{
+							m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("mainText1.png"));
+						}
+						else
+							m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("transformText1.png"));
 					}
 				}
 				break;
+
 			}
-
-			
 		}
 
-
-		#pragma region camera controls
-		if (INPUT->GetKey(SDLK_w))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->AddPosition(m_entities[EntityEnums::CAM]->GetTransform()->GetForward());
-		}
-
-		if (INPUT->GetKey(SDLK_a))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->AddPosition(-m_entities[EntityEnums::CAM]->GetTransform()->GetRight());
-		}
-
-		if (INPUT->GetKey(SDLK_d))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->AddPosition(m_entities[EntityEnums::CAM]->GetTransform()->GetRight());
-		}
-
-		if (INPUT->GetKey(SDLK_s))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->AddPosition(-m_entities[EntityEnums::CAM]->GetTransform()->GetForward());
-		}
-
-		if (INPUT->GetKey(SDLK_SPACE))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->AddPosition(m_entities[EntityEnums::CAM]->GetTransform()->GetUp());
-		}
-
-		if (INPUT->GetKey(SDLK_LCTRL))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->AddPosition(-m_entities[EntityEnums::CAM]->GetTransform()->GetUp());
-		}
-
-
-
-		if (INPUT->GetKey(SDLK_e))
-		{
-			//baseMousePos = INPUT->GetMousePos();
-			m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(1, glm::vec3(0, 1, 0));
-		}
-
-		if (INPUT->GetKey(SDLK_q))
-		{
-			m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(-1, glm::vec3(0, 1, 0));
-			//m_uiVP = GetCamera()->Get();
-			m_entities[3]->GetTransform()->LookAt(m_entities[1]->GetTransform()->GetPosition());
-		}
-
-		
-
-		
-		
-		//oldMousePos = deltaMousePos;
-
-		if (lookEnabled)
-		{
-			deltaMousePos = oldMousePos - INPUT->GetMousePos(); //-oldMousePos;
-
-			m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(deltaMousePos.x * 0.2, glm::vec3(0,1,0));
-			m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(deltaMousePos.y * 0.2, m_entities[EntityEnums::CAM]->GetTransform()->GetRight());
-			//SDL_WarpMouseInWindow(NULL, m_windowWidth / 2, m_windowHeight / 2);
-
-			oldMousePos = INPUT->GetMousePos();
-		}
-
-		//m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(oldMousePos.x * 0.01, glm::vec3(0,1,0));
-		//m_entities[EntityEnums::CAM]->GetTransform()->RotateEulerAxis(oldMousePos.y * 0.01, m_entities[EntityEnums::CAM]->GetTransform()->GetRight());
-
-
-		
-
-		//--------------------------------------------sfdsfdsfdsfdsf
-		if (INPUT->GetKey(SDLK_i))
-		{
-			m_entities[8]->GetComponent<RigidBody>()->AddForce(glm::vec3(0, 50, 0));
-		}
-
-		if (INPUT->GetKey(SDLK_j))
-		{
-			m_entities[8]->GetComponent<RigidBody>()->AddForce(glm::vec3(-20, 0, 0));
-		}
-
-		if (INPUT->GetKey(SDLK_l))
-		{
-			m_entities[8]->GetComponent<RigidBody>()->AddForce(glm::vec3(20, 0, 0));
-		}
-
-		if (INPUT->GetKey(SDLK_k))
-		{
-			m_entities[8]->GetComponent<RigidBody>()->AddForce(glm::vec3(10, 100, 0));
-		}
-
-
-#pragma endregion
 
 		//SDL_WarpMouseInWindow(NULL, m_windowWidth/2 , m_windowHeight/2);
 
 		//oldMousePos = INPUT->GetMousePos();
 
 		//m_entities.at(0)->GetTransform()->RotateEulerAxis(1, glm::vec3(0, 1, 0));
-		m_entities[DIR_LIGHT]->GetTransform()->RotateEulerAxis(1, glm::vec3(0, 1, 0));
+		//m_entities[DIR_LIGHT]->GetTransform()->RotateEulerAxis(1, glm::vec3(0, 1, 0));
 		
 		
 		// input
@@ -263,45 +288,352 @@ void Application::Loop()
 		}
 
 
-		if (INPUT->GetKey(SDLK_g))
+		#pragma region physics object user interactions
+		if (m_currEntity != NULL && m_currEntity->GetComponent<RigidBody>() != nullptr)
 		{
-			m_entities[6]->GetComponent<RigidBody>()->RemoveIntertia();
-			m_entities[6]->GetTransform()->SetPosition(m_entities[EntityEnums::CAM]->GetTransform()->GetPosition());
-			m_entities[6]->GetComponent<RigidBody>()->AddForce(m_entities[EntityEnums::CAM]->GetTransform()->GetForward() * glm::vec3(1200));
+			if (INPUT->GetKey(SDLK_g))
+			{
+				m_currEntity->GetComponent<RigidBody>()->ToggleGravity();
+			}
+
+			if (INPUT->GetKey(SDLK_p))
+			{
+				if (isPossessing)
+				{
+					isPossessing = false;
+				}
+				else
+				{
+					isPossessing = true;
+				}
+				
+			}
 		}
 
-		//glm::vec3 dir = m_entities[3]->GetTransform()->GetPosition - m_entities[3]->GetTransform()->GetPosition();
-		//glm::normalize(dir);
-		//glm::quat rot = glm::RotationBetweenVectors(vec3(0.0f, 0.0f, 1.0f), dir);
-		//m_entities[3]->GetTransform()->SetRotation(glm::lookAt)
+		if (isPossessing)
+		{
+
+			if (!lookEnabled)
+			m_camEntity->GetTransform()->SetRotation(m_posessionTransform.GetRotation());
+
+			m_camEntity->GetTransform()->SetPosition(m_currEntity->GetTransform()->GetPosition() + (glm::normalize(m_posessionTransform.GetUp()) * glm::vec3(3)) - (glm::normalize(m_posessionTransform.GetForward()) * glm::vec3(15)));
+
+			if (INPUT->GetKey(SDLK_w))
+			{
+				m_currEntity->GetComponent<RigidBody>()->ApplyDamping(0.01);
+				m_currEntity->GetComponent<RigidBody>()->AddForce(glm::normalize(m_camEntity->GetTransform()->GetForward())* glm::vec3(5));
+			}
+
+			if (INPUT->GetKey(SDLK_a))
+			{
+				m_posessionTransform.RotateEulerAxis(-1, m_posessionTransform.GetUp());
+			}
+
+			if (INPUT->GetKey(SDLK_d))
+			{
+				m_posessionTransform.RotateEulerAxis(1, m_posessionTransform.GetUp());
+			}
+
+			if (INPUT->GetKey(SDLK_s))
+			{
+				m_currEntity->GetComponent<RigidBody>()->ApplyDamping(0.1); 
+			}
+
+			if (INPUT->GetKey(SDLK_SPACE))
+			{
+				m_currEntity->GetComponent<RigidBody>()->AddForce(glm::vec3(0,100,0));
+			}
+		}
+#pragma endregion
+		
+
 
 		
 		auto currentTicks = std::chrono::high_resolution_clock::now();
 		float deltaTime = (float)std::chrono::duration_cast<std::chrono::microseconds>(currentTicks - prevTicks).count() / 100000;
 		m_worldDeltaTime = deltaTime;
 		prevTicks = currentTicks;
-		//TODO: print delta time using log
-		//Log::Debug("deltaTime is " + std::to_string(deltaTime), debugMode);
-		//std::cout << "cam rot is " << m_entities[EntityEnums::CAM]->GetTransform()->GetRotation().x << ", " << m_entities[EntityEnums::CAM]->GetTransform()->GetRotation().y << ", " << m_entities[EntityEnums::CAM]->GetTransform()->GetRotation().z << std::endl;
-
+		
 		Physics::GetInstance()->Update(deltaTime);
 
-		lightDir = m_entities[DIR_LIGHT]->GetTransform()->GetRight();
+		lightDir = m_entities[DIR_LIGHT]->GetTransform()->GetForward();
 
-		//m_entities.at(3)->GetTransform()->LookAt(m_entities[EntityEnums::CAM]->GetTransform()->GetPosition()); // this is a thing that maybe should not be
 
-		glm::vec4 test4 = m_entities.at(3)->GetComponent<MeshRenderer>()->GetMVP() * glm::vec4(m_entities.at(3)->GetTransform()->GetPosition(), 1);
-		//glm::vec4 test4 = m_mainCamera->Get() * glm::vec4(m_entities.at(3)->GetTransform()->GetPosition(), 1);
-		//glm::vec3 test4 = glm::project(m_entities.at(3)->GetTransform()->GetPosition(), m_entities.at(3)->GetTransform()->GetTransformationMatrix(), GetCamera()->Get(), glViewport);
-		glm::vec2 test = glm::vec2(test4.x, test4.y);
+		
+		if (lookEnabled)
+		{
 
-		//std::cout << test.x << "," << test.y << std::endl;
+			deltaMousePos = oldMousePos - INPUT->GetMousePos();
 
-		//New test
-		glm::mat4 M = m_entities.at(3)->GetTransform()->GetTransformationMatrix();
-		glm::mat4 V = m_mainCamera->GetView();
-		glm::mat4 P = m_mainCamera->GetProj();
-		std::cout << M[1][1] << std::endl;
+			std::cout << "delta: " << deltaMousePos.x << " old: " << oldMousePos.x << " input: " << INPUT->GetMousePos().x << std::endl << std::endl;
+
+			m_camEntity->GetTransform()->RotateEulerAxis(deltaMousePos.x * -0.2, glm::vec3(0, 1, 0));
+			m_camEntity->GetTransform()->RotateEulerAxis(deltaMousePos.y * -0.2, m_camEntity->GetTransform()->GetRight());
+
+			oldMousePos = INPUT->GetMousePos();
+
+			#pragma region object selection
+			m_targetEntity = NULL;
+			float closest = 0;
+
+			for (auto& a : m_entities)
+			{
+
+				glm::vec3 Cfwd = glm::normalize(m_camEntity->GetTransform()->GetForward());;
+
+				glm::vec3 Opos = a->GetTransform()->GetPosition();  //a->GetTransform()->GetPosition(); // calculate distance between object and camera
+				glm::vec3 Cpos = m_camEntity->GetTransform()->GetPosition();
+
+				glm::vec3 Ovec = glm::normalize(Cpos - Opos);
+
+				float val = acos(glm::dot(Cfwd, Ovec)); // https://community.khronos.org/t/angle-between-two-vectors/42042
+
+				if (val > 2.9)
+				{
+
+					if (val > closest) // if angle is closest yet
+					{
+						closest = val;
+
+						m_UIentities[1]->GetTransform()->SetPosition(a->GetTransform()->GetPosition());
+
+						m_targetEntity = a;
+					}
+
+				}
+
+				if (closest == 0)
+					m_UIentities[1]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() - m_camEntity->GetTransform()->GetForward());
+
+			}
+			#pragma endregion
+		}
+		else if (m_currEntity != NULL) // if not looking, but something is selected
+		{
+			m_UIentities[1]->GetTransform()->SetPosition(m_currEntity->GetTransform()->GetPosition()); // place selection object
+
+			#pragma region transform controls
+
+			if (INPUT->GetKey(SDLK_z))
+			{
+				m_transformSelection = TransformStates::POS;
+				selectionCol = glm::vec4(0.4f, 0.4f, 0.8f, 0.6f);
+			}
+			else if (INPUT->GetKey(SDLK_x))
+			{
+				m_transformSelection = TransformStates::ROT;
+				selectionCol = glm::vec4(0.4f, 0.8f, 0.4f, 0.6f);
+			}
+			else if (INPUT->GetKey(SDLK_c))
+			{
+				m_transformSelection = TransformStates::SCALE;
+				selectionCol = glm::vec4(0.8f, 0.4f, 0.4f, 0.6f);
+			}
+
+			#pragma region JL
+			if (INPUT->GetKey(SDLK_j))
+			{
+				switch (m_transformSelection)
+				{
+					case (TransformStates::POS):
+					{
+						m_currEntity->GetTransform()->AddPosition(glm::vec3(-1, 0, 0));
+					}
+					break;
+
+					case (TransformStates::ROT):
+					{
+						m_currEntity->GetTransform()->RotateEulerAxis(1, m_currEntity->GetTransform()->GetUp());
+					}
+					break;
+
+					case (TransformStates::SCALE):
+					{
+						m_currEntity->GetTransform()->addScale(glm::vec3(-0.04f, 0, 0));
+					}
+					break;
+				}
+			}
+
+			if (INPUT->GetKey(SDLK_l))
+			{
+				switch (m_transformSelection)
+				{
+				case (TransformStates::POS):
+				{
+					m_currEntity->GetTransform()->AddPosition(glm::vec3(1, 0, 0));
+				}
+				break;
+
+				case (TransformStates::ROT):
+				{
+					m_currEntity->GetTransform()->RotateEulerAxis(-1, m_currEntity->GetTransform()->GetUp());
+				}
+				break;
+
+				case (TransformStates::SCALE):
+				{
+					m_currEntity->GetTransform()->addScale(glm::vec3(0.04f, 0, 0));
+				}
+				break;
+				}
+			}
+			#pragma endregion
+
+			#pragma region IK
+			if (INPUT->GetKey(SDLK_i))
+			{
+				switch (m_transformSelection)
+				{
+				case (TransformStates::POS):
+				{
+					m_currEntity->GetTransform()->AddPosition(glm::vec3(0, 0, -1));
+				}
+				break;
+
+				case (TransformStates::ROT):
+				{
+					m_currEntity->GetTransform()->RotateEulerAxis(1, m_currEntity->GetTransform()->GetRight());
+				}
+				break;
+
+				case (TransformStates::SCALE):
+				{
+					m_currEntity->GetTransform()->addScale(glm::vec3(0, 0, 0.04f));
+				}
+				break;
+				}
+			}
+
+			if (INPUT->GetKey(SDLK_k))
+			{
+				switch (m_transformSelection)
+				{
+				case (TransformStates::POS):
+				{
+					m_currEntity->GetTransform()->AddPosition(glm::vec3(0, 0, 1));
+				}
+				break;
+
+				case (TransformStates::ROT):
+				{
+					m_currEntity->GetTransform()->RotateEulerAxis(-1, m_currEntity->GetTransform()->GetRight());
+				}
+				break;
+
+				case (TransformStates::SCALE):
+				{
+					m_currEntity->GetTransform()->addScale(glm::vec3(0, 0, -0.04f));
+				}
+				break;
+				}
+			}
+			#pragma endregion
+
+			#pragma region UO
+			if (INPUT->GetKey(SDLK_u))
+			{
+				switch (m_transformSelection)
+				{
+				case (TransformStates::POS):
+				{
+					m_currEntity->GetTransform()->AddPosition(glm::vec3(0, -1, 0));
+				}
+				break;
+
+				case (TransformStates::ROT):
+				{
+					m_currEntity->GetTransform()->RotateEulerAxis(1, m_currEntity->GetTransform()->GetForward());
+				}
+				break;
+
+				case (TransformStates::SCALE):
+				{
+					m_currEntity->GetTransform()->addScale(glm::vec3(0, -0.04f, 0));
+				}
+				break;
+				}
+			}
+
+			if (INPUT->GetKey(SDLK_o))
+			{
+				switch (m_transformSelection)
+				{
+				case (TransformStates::POS):
+				{
+					m_currEntity->GetTransform()->AddPosition(glm::vec3(0, 1, 0));
+				}
+				break;
+
+				case (TransformStates::ROT):
+				{
+					m_currEntity->GetTransform()->RotateEulerAxis(-1, m_currEntity->GetTransform()->GetForward());
+				}
+				break;
+
+				case (TransformStates::SCALE):
+				{
+					m_currEntity->GetTransform()->addScale(glm::vec3(0, 0.04f, 0));
+				}
+				break;
+				}
+			}
+			#pragma endregion
+
+			#pragma endregion
+
+		}
+		else // if not looking, and nothing is selected, hide the select object above the camera
+		{
+			m_UIentities[1]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() + m_camEntity->GetTransform()->GetUp());
+		}
+		
+
+		#pragma region selection control
+		float selectionScale = ((m_camEntity->GetTransform()->GetPosition().x - m_UIentities[1]->GetTransform()->GetPosition().x) * (m_camEntity->GetTransform()->GetPosition().x - m_UIentities[1]->GetTransform()->GetPosition().x) +
+			(m_camEntity->GetTransform()->GetPosition().y - m_UIentities[1]->GetTransform()->GetPosition().y) * (m_camEntity->GetTransform()->GetPosition().y - m_UIentities[1]->GetTransform()->GetPosition().y) +
+			(m_camEntity->GetTransform()->GetPosition().z - m_UIentities[1]->GetTransform()->GetPosition().z) * (m_camEntity->GetTransform()->GetPosition().z - m_UIentities[1]->GetTransform()->GetPosition().z));
+
+		selectionScale = sqrt(selectionScale) / 300;
+
+		if (m_currEntity == m_targetEntity || m_targetEntity == NULL)
+		{
+			selectionScale *= 1 + (0.2f * sinf(scaleBounce));
+			scaleBounce += 0.04f;
+		}
+
+		m_UIentities[1]->GetTransform()->SetScale(glm::vec3(selectionScale, selectionScale, selectionScale));
+#pragma endregion
+
+		#pragma region point light
+
+		if (m_entities[0]->GetTransform()->GetPosition() != m_pointLightPos) // if the point light has moved
+		{
+
+			m_pointLightPos = m_entities[0]->GetTransform()->GetPosition();
+
+			for (auto& a : m_entities)
+			{
+				if (a->GetComponent<MeshRenderer>()->IsLit())
+				{
+					// get distance
+					glm::vec3 mPos = a->GetTransform()->GetPosition();
+					float dist = ((mPos.x - m_pointLightPos.x) * (mPos.x - m_pointLightPos.x)) + ((mPos.y - m_pointLightPos.y) * (mPos.y - m_pointLightPos.y)) + ((mPos.z - m_pointLightPos.z) * (mPos.z - m_pointLightPos.z));
+
+					if (dist < 10000)
+					{
+						a->GetComponent<MeshRenderer>()->SetPLVal(-glm::normalize(mPos - m_pointLightPos), (10000 - dist) / 10000);
+					}
+					else
+					{
+						a->GetComponent<MeshRenderer>()->SetPLVal(glm::vec3(0, 0, 0), 0);
+					}
+
+
+				}
+			}
+		}
+#pragma endregion
 
 
 		Update(deltaTime);
@@ -320,6 +652,12 @@ void Application::Quit()
 {
 	//Close SDL
 	Physics::GetInstance()->Quit();
+	//delete[] &m_entities;
+	for (auto& a : m_entities)
+	{
+		a->DeleteComponents();
+	}
+	m_entities.clear();
 	SDL_GL_DeleteContext(m_glContext);
 	SDL_DestroyWindow(m_window);
 	SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
@@ -343,96 +681,29 @@ Application* Application::GetInstance()
 void Application::GameInit()
 {
 
-	#pragma region load resources
-	//loading all resources
-	Resources::GetInstance()->AddModel("cube.obj");
-	Resources::GetInstance()->AddModel("sphere.obj");
-	Resources::GetInstance()->AddModel("man.obj");
-	Resources::GetInstance()->AddModel("xyzOBJ.obj");
-	Resources::GetInstance()->AddTexture("Wood.jpg");
-	Resources::GetInstance()->AddTexture("testText3.png");
-	Resources::GetInstance()->AddTexture("pixels.jpg");
-	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "simple_FRAG.glsl"),"simple");
-	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "inverted_FRAG.glsl"), "inverted");
-	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "normals_VERT.glsl", ASSET_PATH + "ADS_FRAG.glsl"), "ADS");
-	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "UI_FRAG.glsl"), "UI");
-	#pragma endregion
-
-	#pragma region add stuff
-	m_UIentities.push_back(new Entity());
-	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("UI"), Resources::GetInstance()->GetTexture("testText3.png"), 2));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 1));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(50.2f, 50.2f, 50.2f));
-
-	m_UIentities.push_back(new Entity());
-	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("xyzOBJ.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("pixels.jpg")));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
-
-	//Students should aim to have a better way of managing the scene for coursework
-	m_entities.push_back(new Entity());
-	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("testText3.png")));
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -11));
-
-	m_entities.push_back(new Entity()); // --------!---------THIS COULD BE IN WRONG PLACE --------!--------!-------
+	m_camEntity = new Entity();
 	CameraComp* cc = new CameraComp();
-	m_entities.at(m_entities.size() - 1)->AddComponent(cc);
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 101));
- 
+	m_camEntity->AddComponent(cc);
+	m_camEntity->GetTransform()->SetPosition(glm::vec3(0, 0, 100));
 
-	m_entities.push_back(new Entity()); // Light
-	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("man.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("pixels.jpg")));
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 50));
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
+	m_camEntity->OnUpdate(m_worldDeltaTime);
 
+	//m_uiVP = m_mainCamera->Get();
 
-	m_entities.push_back(new Entity());
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
-	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("man.obj"), Resources::GetInstance()->GetShader("ADS"), Resources::GetInstance()->GetTexture("Wood.jpg"), 1));
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetScale(glm::vec3(1.f, 1.f, 1.f));
-
-
-	m_entities.push_back(new Entity());
-	m_entities.at(m_entities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
-	m_entities.at(m_entities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("cube.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("pixels.jpg"), 1));
-	m_entities.at(m_entities.size() - 1)->AddComponent<RigidBody>();
-	m_entities.at(m_entities.size() - 1)->GetComponent<RigidBody>()->Init(new SphereShape(1.f));
-	m_entities.at(m_entities.size() - 1)->GetComponent<RigidBody>()->Get()->setMassProps(10, btVector3());
-
-	//m_entities.at(2)->AddComponent(new Entity());
-
-#pragma region adding physics objects
-	Entity* a = new Entity();
-	m_entities.push_back(a);
-	a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("cube.obj"), Resources::GetInstance()->GetShader("simple"), Resources::GetInstance()->GetTexture("Wood.jpg")));
-	MeshRenderer* m = a->GetComponent<MeshRenderer>();
-	a->GetTransform()->SetPosition(glm::vec3(0, -100.f, -20.f));
-	a->AddComponent<RigidBody>();
-	a->GetComponent<RigidBody>()->Init(new BoxShape(glm::vec3(100.f, 1.f, 101.f)));
-	a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
-	a->GetComponent<RigidBody>()->Get()->setMassProps(0, btVector3(1.f,1.f,1.f));
-	a->GetTransform()->SetScale(glm::vec3(100.f, 1.f, 100.f));
-	for (int i = 0; i < 50; i++)
-	{
-		Entity* a = new Entity();
-		m_entities.push_back(a);
-		a->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("ADS"), Resources::GetInstance()->GetTexture("Wood.jpg"),1));
-		a->GetTransform()->SetPosition(glm::vec3(0, 5.f * i, -18.f));
-		a->AddComponent<RigidBody>();
-		a->GetComponent<RigidBody>()->Init(new CapsuleShape(1.f, 2.5f));//new SphereShape(1.f)); //BoxShape(glm::vec3(1.f,1.f, 1.f))); // 
-		a->GetComponent<RigidBody>()->Get()->setMassProps(1.f, btVector3(1.0f, 1.0f, 1.0f));
-		//a->GetComponent<RigidBody>()->Get()->setAngularVelocity(btVector3(2.0f, 1.0f, 3.0f));
-		a->GetTransform()->SetScale(glm::vec3(0.1f, 0.1f, 0.1f));
-		a->GetComponent<RigidBody>()->Get()->setRestitution(1);
-		//a->GetTransform()->SetRotation(glm::vec3(0.f, 0.f, 0.f));
-	}
-
-
-#pragma endregion
-#pragma endregion
+	m_entities = m_sceneLoader.LoadScene(1);
 
 	deltaMousePos = INPUT->GetMousePos(); // may not be required
 	oldMousePos = INPUT->GetMousePos();
+
+	m_UIentities.push_back(new Entity());
+	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("UI"), Resources::GetInstance()->GetTexture("mainText1.png"), 2));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 1));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(3.6f, 2.0f, 2.0f));
+
+	m_UIentities.push_back(new Entity());
+	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("flatColour"), Resources::GetInstance()->GetTexture("xyzTex.jpg")));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
 
 }
 
@@ -445,11 +716,16 @@ void Application::Run()
 
 void Application::Update(float deltaTime)
 {
+	if (!isPossessing)
+	{
+		m_camEntity->OnUpdate(deltaTime);
+	}
 
 	for (auto& a : m_entities)
 	{
 		a->OnUpdate(deltaTime);
 	}
+
 }
 void Application::Render()
 {

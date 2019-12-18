@@ -44,8 +44,6 @@ public:
 
 	std::shared_ptr<Texture> GetTexture(const std::string& name);
 
-	//Deletes all the things!
 	void ReleaseResources();
-	//TODO: Release Unused Resources
 };
 

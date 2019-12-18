@@ -12,6 +12,7 @@ private:
 
 public:
 	Texture(std::string path);
+	~Texture();
 	void Bind();
 	GLuint m_GLuint; // this possibly should not exist
 };
