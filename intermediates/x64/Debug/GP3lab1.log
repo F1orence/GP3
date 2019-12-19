@@ -1,0 +1,41 @@
+﻿  Application.cpp
+E:\GP3 labs\GP3lab1\GP3lab1\Application.cpp(224,47): warning C4554:  '&': check operator precedence for possible error; use parentheses to clarify precedence
+E:\GP3 labs\GP3lab1\GP3lab1\Application.cpp(336,65): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+E:\GP3 labs\GP3lab1\GP3lab1\Application.cpp(337,65): warning C4244:  'argument': conversion from 'double' to 'float', possible loss of data
+E:\GP3 labs\GP3lab1\GP3lab1\Application.cpp(738,61): warning C4305:  'argument': truncation from 'double' to 'float'
+E:\GP3 labs\GP3lab1\GP3lab1\Application.cpp(754,60): warning C4305:  'argument': truncation from 'double' to 'float'
+  GP3lab1.vcxproj -> E:\GP3 labs\GP3lab1\bin\x64\Debug\ GP3lab1_x64.exe
+  E:\GP3 labs\GP3lab1\dependencies\dll\glew32.dll
+  E:\GP3 labs\GP3lab1\dependencies\dll\SDL2.dll
+  E:\GP3 labs\GP3lab1\dependencies\dll\assimp.dll
+  3 File(s) copied
+  E:\GP3 labs\GP3lab1\assets\Wood.jpg
+  E:\GP3 labs\GP3lab1\assets\simple_VERT.glsl
+  E:\GP3 labs\GP3lab1\assets\simple_FRAG.glsl
+  E:\GP3 labs\GP3lab1\assets\man.obj
+  E:\GP3 labs\GP3lab1\assets\cube.OBJ
+  E:\GP3 labs\GP3lab1\assets\inverted_FRAG.glsl
+  E:\GP3 labs\GP3lab1\assets\ADS_FRAG.glsl
+  E:\GP3 labs\GP3lab1\assets\normals_VERT.glsl
+  E:\GP3 labs\GP3lab1\assets\UI_VERT.glsl
+  E:\GP3 labs\GP3lab1\assets\UI_FRAG.glsl
+  E:\GP3 labs\GP3lab1\assets\capsule.obj
+  E:\GP3 labs\GP3lab1\assets\cylinder.obj
+  E:\GP3 labs\GP3lab1\assets\sphere.obj
+  E:\GP3 labs\GP3lab1\assets\oColor_FRAG.glsl
+  E:\GP3 labs\GP3lab1\assets\mainText1.png
+  E:\GP3 labs\GP3lab1\assets\selectionText1.png
+  E:\GP3 labs\GP3lab1\assets\transformText1.png
+  E:\GP3 labs\GP3lab1\assets\WoodGrain.jpg
+  E:\GP3 labs\GP3lab1\assets\WoodGrain.png
+  E:\GP3 labs\GP3lab1\assets\manTexture1.png
+  E:\GP3 labs\GP3lab1\assets\simpleRepeat_VERT.glsl
+  E:\GP3 labs\GP3lab1\assets\Ground1.png
+  E:\GP3 labs\GP3lab1\assets\Ground1.jpg
+  E:\GP3 labs\GP3lab1\assets\LightBulb.obj
+  E:\GP3 labs\GP3lab1\assets\bulbTex.png
+  E:\GP3 labs\GP3lab1\assets\Lamp.obj
+  E:\GP3 labs\GP3lab1\assets\Lamp.mtl
+  E:\GP3 labs\GP3lab1\assets\lampTex.png
+  E:\GP3 labs\GP3lab1\assets\possessionText1.png
+  29 File(s) copied
