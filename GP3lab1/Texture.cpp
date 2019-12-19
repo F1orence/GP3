@@ -1,14 +1,12 @@
 #include "pch.h"
 #include "Texture.h"
-//stb
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 GLuint Texture::Load(const std::string& directory)
 {
 	stbi_set_flip_vertically_on_load(true);
-	//stbi_set_flip_horizontally_on_load(true);
-	GLuint texture = 0; // --------------------------------------- Maybe this should be changed?
+	GLuint texture = 0; 
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(directory.c_str(), &width, &height, &nrChannels, 0);
 	if (data)

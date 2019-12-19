@@ -105,106 +105,109 @@ void MeshRenderer::OnRender()
 
 	glBindAttribLocation(m_program->Get(), 0, "position");
 
-	// give updated MVP
+	GLuint loc;
 
 	glm::vec4 oColor = Application::GetInstance()->GetSelectionColour();
-	GLuint loc = glGetUniformLocation(m_program->Get(), "objectColor");
+	loc = glGetUniformLocation(m_program->Get(), "objectColor");
 	glUniform4f(loc, oColor.r, oColor.g, oColor.b, oColor.a);
 
 	switch (m_type)
 	{
-		case (0): // basic, with perspective
-		{
-			glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
+	case (0): // basic, with perspective
+	{
+		glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
 
-			glm::mat4 mvp = Application::GetInstance()->GetCamera()->Get() * model;
+		glm::mat4 mvp = Application::GetInstance()->GetCamera()->Get() * model;
 
-			m_MVP = mvp;
+		m_MVP = mvp;
 
-			loc = glGetUniformLocation(m_program->Get(), "MVP");
-			glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
-		}
-		break;
+		loc = glGetUniformLocation(m_program->Get(), "MVP");
+		glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
+	}
+	break;
 
-		case (1): // ADS lighting
-		{
-			glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
-			glm::mat4 mvp = Application::GetInstance()->GetCamera()->Get() * model;
-			m_MVP = mvp; // --------------------------------------------------------------------------------------
-			loc = glGetUniformLocation(m_program->Get(), "MVP");
-			glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
-
-
-			loc = glGetUniformLocation(m_program->Get(), "lightDir");
-			glm::vec3 lightVec = Application::GetInstance()->GetMainLight();
-			glUniform3f(loc, lightVec.x, lightVec.y, lightVec.z);
-
-			loc = glGetUniformLocation(m_program->Get(), "ambLight");
-			lightVec = Application::GetInstance()->GetAmbientColour();
-			glUniform3f(loc, lightVec.x, lightVec.y, lightVec.z);
+	case (1): // ADS lighting
+	{
+		glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
+		glm::mat4 mvp = Application::GetInstance()->GetCamera()->Get() * model;
+		m_MVP = mvp;
+		loc = glGetUniformLocation(m_program->Get(), "MVP");
+		glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
 
 
-			loc = glGetUniformLocation(m_program->Get(), "specValue");
-			//glm::vec3 lightVec = Application::GetInstance()->GetMainLight();
-			glUniform1f(loc, m_spec);
+		loc = glGetUniformLocation(m_program->Get(), "lightDir");
+		glm::vec3 lightVec = Application::GetInstance()->GetMainLight();
+		glUniform3f(loc, lightVec.x, lightVec.y, lightVec.z);
 
-			loc = glGetUniformLocation(m_program->Get(), "modelMat");
-			glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(model));
-
-			loc = glGetUniformLocation(m_program->Get(), "pLightDir");
-			glUniform3f(loc, m_plDir.x, m_plDir.y, m_plDir.z);
+		loc = glGetUniformLocation(m_program->Get(), "ambLight");
+		lightVec = Application::GetInstance()->GetAmbientColour();
+		glUniform3f(loc, lightVec.x, lightVec.y, lightVec.z);
 
 
-			loc = glGetUniformLocation(m_program->Get(), "pLightInt");
-			//glm::vec3 lightVec = Application::GetInstance()->GetMainLight();
-			glUniform1f(loc, m_plInt);
-		}
-		break;
+		loc = glGetUniformLocation(m_program->Get(), "specValue");
+		glUniform1f(loc, m_spec);
 
-		case (2): // basic, using a fixed perspective
-		{
-			glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
+		loc = glGetUniformLocation(m_program->Get(), "modelMat");
+		glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(model));
 
-			glm::mat4 mvp = Application::GetInstance()->GetUICam() * model;
+		loc = glGetUniformLocation(m_program->Get(), "pLightDir");
+		glUniform3f(loc, m_plDir.x, m_plDir.y, m_plDir.z);
 
-			m_MVP = mvp;
 
-			GLuint loc = glGetUniformLocation(m_program->Get(), "MVP");
-			glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
-		}
-		break;
-	
+		loc = glGetUniformLocation(m_program->Get(), "pLightInt");
+		glUniform1f(loc, m_plInt);
+	}
+	break;
 
-		case (3): // basic, with perspective and repeating textures
-		{
-			glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
+	case (2): // basic, using a fixed perspective
+	{
+		glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
 
-			glm::mat4 mvp = Application::GetInstance()->GetCamera()->Get() * model;
+		glm::mat4 mvp = Application::GetInstance()->GetUICam() * model;
 
-			m_MVP = mvp;
+		m_MVP = mvp;
 
-			loc = glGetUniformLocation(m_program->Get(), "MVP");
-			glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
+		GLuint loc = glGetUniformLocation(m_program->Get(), "MVP");
+		glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
+	}
+	break;
 
-			loc = glGetUniformLocation(m_program->Get(), "repeats");
-			glUniform2f(loc, 15, 15);
-		}
-		break;
 
+	case (3): // basic, with perspective and repeating textures
+	{
+		glm::mat4 model = m_entity->GetTransform()->GetTransformationMatrix();
+
+		glm::mat4 mvp = Application::GetInstance()->GetCamera()->Get() * model;
+
+		m_MVP = mvp;
+
+		loc = glGetUniformLocation(m_program->Get(), "MVP");
+		glUniformMatrix4fv(loc, 1, false, (const GLfloat*)glm::value_ptr(mvp));
+
+		loc = glGetUniformLocation(m_program->Get(), "repeats");
+		glUniform2f(loc, 15, 15);
+	}
+	break;
 	}
 
-	loc = glGetUniformLocation(m_program->Get(), "diffuse");
-	glUniform1i(loc, 0); // THIS SHOULD NOT EXIST LIKE THIS, SHOULD GET A UNIQUE INT FROM TEXTURE
 
-	// -------------------------------------------------------------------MAYBE PUT THIS IN AN IF STATEMENT
-	
+	loc = glGetUniformLocation(m_program->Get(), "diffuse");
+	glUniform1i(loc, 0); 
 
 	m_texture->Bind();
-
 	m_mesh->Bind();
 
 	GL_ATTEMPT(glDrawElements(GL_TRIANGLES, m_mesh->GetIndiciesCount(),GL_UNSIGNED_INT, 0));
 
+}
+
+MeshRenderer::~MeshRenderer()
+{
+	for (Mesh* mesh : m_model->GetMeshes())
+	{
+		mesh->ClearBuffers();
+		delete mesh;
+	}
 }
 
 /*

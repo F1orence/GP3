@@ -34,10 +34,9 @@ void Application::Init()
 	//setting openGL context to core, not compatibility
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	//creating window
-	m_window = SDL_CreateWindow("I was named by the application class", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight, SDL_WINDOW_OPENGL);
+	m_window = SDL_CreateWindow("JankEngine 0.1.12", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_windowWidth, m_windowHeight, SDL_WINDOW_OPENGL);
 
 	SDL_CaptureMouse(SDL_TRUE);
-	//SDL_ShowCursor(SDL_DISABLE);
 
 	OpenGlInit();
 	GameInit();
@@ -49,12 +48,11 @@ void Application::Init()
 
 	m_mainCamera->Recalculate();
 
-	m_uiVP = GetCamera()->Get();
+	m_uiVP = GetCamera()->Get(); // get starting camera VP matrix
 
-	m_UIentities[0]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() + (m_camEntity->GetTransform()->GetForward() * glm::vec3(4)));
+	m_UIentities[0]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() + (m_camEntity->GetTransform()->GetForward() * glm::vec3(4))); // position UI plane in front of starting camera
 	m_UIentities[0]->GetTransform()->SetRotation(m_camEntity->GetTransform()->GetRotation());
 
-	//m_sceneLoader = new SceneLoader;
 
 }
 
@@ -75,8 +73,6 @@ void Application::OpenGlInit()
 	}
 	
 
-	//Smooth shading
-	//GL_ATTEMPT(glShadeModel(GL_SMOOTH));
 	//enable depth testing
 	GL_ATTEMPT(glEnable(GL_DEPTH_TEST));
 	//set less or equal func for depth testing
@@ -100,40 +96,6 @@ void Application::Loop()
 	SDL_Event event;
 	while (m_appState != AppState::QUITTING)
 	{
-		/*
-		if (mouseSet)
-		{
-			switch (mouseInt)
-			{
-			case(0):
-			{
-				//SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, m_windowHeight / 2);
-				INPUT->MoveMouse(glm::vec2(-50, 0));
-			}
-			break;
-
-			case(1):
-			{
-				INPUT->MoveMouse(glm::vec2(50, 0));
-			}
-			break;
-
-			case(2):
-			{
-				INPUT->MoveMouse(glm::vec2(0, 50));
-			}
-			break;
-
-			case(3):
-			{
-				INPUT->MoveMouse(glm::vec2(0, -50));
-			}
-			break;
-			}
-
-			mouseSet = false;
-		}
-		*/
 
 		//poll SDL events
 		while (SDL_PollEvent(&event))
@@ -157,6 +119,41 @@ void Application::Loop()
 				case SDL_MOUSEMOTION:
 					{	
 						INPUT->MoveMouse(glm::ivec2(event.motion.xrel, event.motion.yrel));
+
+						#pragma region attempt at better mouse input
+						/*
+							if (mouseSet)
+							{
+								switch (mouseInt)
+								{
+								case(0):
+								{
+									INPUT->MoveMouse(glm::vec2(-50, 0));
+								}
+								break;
+
+								case(1):
+								{
+									INPUT->MoveMouse(glm::vec2(50, 0));
+								}
+								break;
+
+								case(2):
+								{
+									INPUT->MoveMouse(glm::vec2(0, 50));
+								}
+								break;
+
+								case(3):
+								{
+									INPUT->MoveMouse(glm::vec2(0, -50));
+								}
+								break;
+								}
+
+								mouseSet = false;
+							}
+							*/
 
 						//deltaMousePos = INPUT->GetMousePos + baseMousePos;//INPUT->set
 
@@ -206,6 +203,7 @@ void Application::Loop()
 
 						//std::cout << event.motion.xrel << std::endl;
 						*/
+						#pragma endregion
 
 					}
 					break;
@@ -216,7 +214,6 @@ void Application::Loop()
 					{
 						lookEnabled = true;
 						SDL_ShowCursor(SDL_DISABLE);
-						//SDL_WarpMouseInWindow(NULL, m_windowWidth / 2, m_windowHeight / 2);
 						oldMousePos = INPUT->GetMousePos();
 
 						m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("selectionText1.png"));
@@ -226,6 +223,7 @@ void Application::Loop()
 					{
 						if (m_targetEntity != NULL & lookEnabled)
 						{
+							isPossessing = false;
 							m_currEntity = m_targetEntity;
 						}
 						else
@@ -242,7 +240,7 @@ void Application::Loop()
 				}
 				break;
 
-				case SDL_MOUSEBUTTONUP: // https://stackoverflow.com/questions/35165716/sdl-mouse-click
+				case SDL_MOUSEBUTTONUP:
 				{
 					if (INPUT->RightMousePressed(event.button))
 					{
@@ -262,92 +260,63 @@ void Application::Loop()
 			}
 		}
 
-
-		//SDL_WarpMouseInWindow(NULL, m_windowWidth/2 , m_windowHeight/2);
-
-		//oldMousePos = INPUT->GetMousePos();
-
-		//m_entities.at(0)->GetTransform()->RotateEulerAxis(1, glm::vec3(0, 1, 0));
-		//m_entities[DIR_LIGHT]->GetTransform()->RotateEulerAxis(1, glm::vec3(0, 1, 0));
 		
-		
-		// input
-		if (INPUT->GetKey(SDLK_z))
+		#pragma region debug controls
+		if (INPUT->GetKey(SDLK_b))
 		{
 			debugMode = DEBUG_ALL;
 		}
 
-		if (INPUT->GetKey(SDLK_x))
+		if (INPUT->GetKey(SDLK_n))
 		{
 			debugMode = DEBUG_ERRORS_ONLY;
 		}
 
-		if (INPUT->GetKey(SDLK_c))
+		if (INPUT->GetKey(SDLK_m))
 		{
 			debugMode = DEBUG_HIDE_ALL;
 		}
+		#pragma endregion
 
 
-		#pragma region physics object user interactions
+		#pragma region user interactions with physics objects
 		if (m_currEntity != NULL && m_currEntity->GetComponent<RigidBody>() != nullptr)
 		{
-			if (INPUT->GetKey(SDLK_g))
+			if (INPUT->GetKey(SDLK_g) & !INPUT->KeyWasDown(SDLK_g))
 			{
 				m_currEntity->GetComponent<RigidBody>()->ToggleGravity();
 			}
 
-			if (INPUT->GetKey(SDLK_p))
+			if (INPUT->GetKey(SDLK_p) & !INPUT->KeyWasDown(SDLK_p))
 			{
 				if (isPossessing)
 				{
 					isPossessing = false;
+					m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("transformText1.png"));
 				}
 				else
 				{
 					isPossessing = true;
+					m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("possessionText1.png"));
+
 				}
 				
+			}
+		}
+		else
+		{
+			if (INPUT->GetKey(SDLK_g) & !INPUT->KeyWasDown(SDLK_g) || INPUT->GetKey(SDLK_p) & !INPUT->KeyWasDown(SDLK_p))
+			{
+				Log::Debug("Woops! You need to select an object with physics to do that!",debugMode);
 			}
 		}
 
 		if (isPossessing)
 		{
-
-			if (!lookEnabled)
-			m_camEntity->GetTransform()->SetRotation(m_posessionTransform.GetRotation());
-
-			m_camEntity->GetTransform()->SetPosition(m_currEntity->GetTransform()->GetPosition() + (glm::normalize(m_posessionTransform.GetUp()) * glm::vec3(3)) - (glm::normalize(m_posessionTransform.GetForward()) * glm::vec3(15)));
-
-			if (INPUT->GetKey(SDLK_w))
-			{
-				m_currEntity->GetComponent<RigidBody>()->ApplyDamping(0.01);
-				m_currEntity->GetComponent<RigidBody>()->AddForce(glm::normalize(m_camEntity->GetTransform()->GetForward())* glm::vec3(5));
-			}
-
-			if (INPUT->GetKey(SDLK_a))
-			{
-				m_posessionTransform.RotateEulerAxis(-1, m_posessionTransform.GetUp());
-			}
-
-			if (INPUT->GetKey(SDLK_d))
-			{
-				m_posessionTransform.RotateEulerAxis(1, m_posessionTransform.GetUp());
-			}
-
-			if (INPUT->GetKey(SDLK_s))
-			{
-				m_currEntity->GetComponent<RigidBody>()->ApplyDamping(0.1); 
-			}
-
-			if (INPUT->GetKey(SDLK_SPACE))
-			{
-				m_currEntity->GetComponent<RigidBody>()->AddForce(glm::vec3(0,100,0));
-			}
+			PossessionUpdate();
 		}
-#pragma endregion
+		#pragma endregion
 		
-
-
 		
 		auto currentTicks = std::chrono::high_resolution_clock::now();
 		float deltaTime = (float)std::chrono::duration_cast<std::chrono::microseconds>(currentTicks - prevTicks).count() / 100000;
@@ -359,13 +328,10 @@ void Application::Loop()
 		lightDir = m_entities[DIR_LIGHT]->GetTransform()->GetForward();
 
 
-		
 		if (lookEnabled)
 		{
 
 			deltaMousePos = oldMousePos - INPUT->GetMousePos();
-
-			std::cout << "delta: " << deltaMousePos.x << " old: " << oldMousePos.x << " input: " << INPUT->GetMousePos().x << std::endl << std::endl;
 
 			m_camEntity->GetTransform()->RotateEulerAxis(deltaMousePos.x * -0.2, glm::vec3(0, 1, 0));
 			m_camEntity->GetTransform()->RotateEulerAxis(deltaMousePos.y * -0.2, m_camEntity->GetTransform()->GetRight());
@@ -379,12 +345,12 @@ void Application::Loop()
 			for (auto& a : m_entities)
 			{
 
-				glm::vec3 Cfwd = glm::normalize(m_camEntity->GetTransform()->GetForward());;
+				glm::vec3 Cfwd = glm::normalize(m_camEntity->GetTransform()->GetForward());
 
-				glm::vec3 Opos = a->GetTransform()->GetPosition();  //a->GetTransform()->GetPosition(); // calculate distance between object and camera
-				glm::vec3 Cpos = m_camEntity->GetTransform()->GetPosition();
+				glm::vec3 Opos = a->GetTransform()->GetPosition(); // get position of object
+				glm::vec3 Cpos = m_camEntity->GetTransform()->GetPosition(); // get postion of camera
 
-				glm::vec3 Ovec = glm::normalize(Cpos - Opos);
+				glm::vec3 Ovec = glm::normalize(Cpos - Opos); // get normalized vector between object and camera
 
 				float val = acos(glm::dot(Cfwd, Ovec)); // https://community.khronos.org/t/angle-between-two-vectors/42042
 
@@ -437,7 +403,7 @@ void Application::Loop()
 				{
 					case (TransformStates::POS):
 					{
-						m_currEntity->GetTransform()->AddPosition(glm::vec3(-1, 0, 0));
+						m_currEntity->GetTransform()->AddPosition(-glm::normalize(glm::vec3(m_camEntity->GetTransform()->GetRight().x, 0, m_camEntity->GetTransform()->GetRight().z)));
 					}
 					break;
 
@@ -461,7 +427,7 @@ void Application::Loop()
 				{
 				case (TransformStates::POS):
 				{
-					m_currEntity->GetTransform()->AddPosition(glm::vec3(1, 0, 0));
+					m_currEntity->GetTransform()->AddPosition(glm::normalize(glm::vec3(m_camEntity->GetTransform()->GetRight().x, 0, m_camEntity->GetTransform()->GetRight().z)));
 				}
 				break;
 
@@ -487,7 +453,7 @@ void Application::Loop()
 				{
 				case (TransformStates::POS):
 				{
-					m_currEntity->GetTransform()->AddPosition(glm::vec3(0, 0, -1));
+					m_currEntity->GetTransform()->AddPosition(glm::normalize(glm::vec3(m_camEntity->GetTransform()->GetForward().x, 0, m_camEntity->GetTransform()->GetForward().z)));
 				}
 				break;
 
@@ -511,7 +477,7 @@ void Application::Loop()
 				{
 				case (TransformStates::POS):
 				{
-					m_currEntity->GetTransform()->AddPosition(glm::vec3(0, 0, 1));
+					m_currEntity->GetTransform()->AddPosition(-glm::normalize(glm::vec3(m_camEntity->GetTransform()->GetForward().x, 0, m_camEntity->GetTransform()->GetForward().z)));
 				}
 				break;
 
@@ -652,16 +618,16 @@ void Application::Quit()
 {
 	//Close SDL
 	Physics::GetInstance()->Quit();
-	//delete[] &m_entities;
 	for (auto& a : m_entities)
 	{
 		a->DeleteComponents();
 	}
 	m_entities.clear();
+
 	SDL_GL_DeleteContext(m_glContext);
 	SDL_DestroyWindow(m_window);
 	SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
-	//Resources::GetInstance
+	Resources::GetInstance()->ReleaseResources();
 	SDL_Quit();
 }
 
@@ -686,13 +652,13 @@ void Application::GameInit()
 	m_camEntity->AddComponent(cc);
 	m_camEntity->GetTransform()->SetPosition(glm::vec3(0, 0, 100));
 
-	m_camEntity->OnUpdate(m_worldDeltaTime);
-
-	//m_uiVP = m_mainCamera->Get();
+	Resources::GetInstance()->AddTexture("mainText1.png");
+	Resources::GetInstance()->AddTexture("selectionText1.png");
+	Resources::GetInstance()->AddTexture("transformText1.png");
+	Resources::GetInstance()->AddTexture("possessionText1.png");
 
 	m_entities = m_sceneLoader.LoadScene(1);
 
-	deltaMousePos = INPUT->GetMousePos(); // may not be required
 	oldMousePos = INPUT->GetMousePos();
 
 	m_UIentities.push_back(new Entity());
@@ -701,8 +667,8 @@ void Application::GameInit()
 	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(3.6f, 2.0f, 2.0f));
 
 	m_UIentities.push_back(new Entity());
-	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("flatColour"), Resources::GetInstance()->GetTexture("xyzTex.jpg")));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -100));
+	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("flatColour"), Resources::GetInstance()->GetTexture("mainText1.png")));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -101));
 	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
 
 }
@@ -726,10 +692,11 @@ void Application::Update(float deltaTime)
 		a->OnUpdate(deltaTime);
 	}
 
+	INPUT->Update();
+
 }
 void Application::Render()
 {
-	/* Clear context */
 	GL_ATTEMPT(glEnable(GL_DEPTH_TEST));
 	GL_ATTEMPT(glEnable(GL_CULL_FACE));
 
@@ -741,7 +708,6 @@ void Application::Render()
 	{
 		a->OnRender();
 	}
-
 
 	GL_ATTEMPT(glDisable(GL_DEPTH_TEST));
 	GL_ATTEMPT(glDisable(GL_CULL_FACE));
@@ -757,6 +723,40 @@ void Application::SetCamera(Camera* camera)
 	if (camera != nullptr)
 	{
 		m_mainCamera = camera;
+	}
+}
+
+void Application::PossessionUpdate()
+{
+	if (!lookEnabled)
+		m_camEntity->GetTransform()->SetRotation(m_posessionTransform.GetRotation());
+
+	m_camEntity->GetTransform()->SetPosition(m_currEntity->GetTransform()->GetPosition() + (glm::normalize(m_posessionTransform.GetUp()) * glm::vec3(3)) - (glm::normalize(m_posessionTransform.GetForward()) * glm::vec3(15)));
+
+	if (INPUT->GetKey(SDLK_w))
+	{
+		m_currEntity->GetComponent<RigidBody>()->ApplyDamping(0.01);
+		m_currEntity->GetComponent<RigidBody>()->AddForce(glm::normalize(m_camEntity->GetTransform()->GetForward()) * glm::vec3(50) * m_worldDeltaTime);
+	}
+
+	if (INPUT->GetKey(SDLK_a))
+	{
+		m_posessionTransform.RotateEulerAxis(-10 * m_worldDeltaTime, m_posessionTransform.GetUp());
+	}
+
+	if (INPUT->GetKey(SDLK_d))
+	{
+		m_posessionTransform.RotateEulerAxis(10 * m_worldDeltaTime, m_posessionTransform.GetUp());
+	}
+
+	if (INPUT->GetKey(SDLK_s))
+	{
+		m_currEntity->GetComponent<RigidBody>()->ApplyDamping(0.1);
+	}
+
+	if (INPUT->GetKey(SDLK_SPACE))
+	{
+		m_currEntity->GetComponent<RigidBody>()->AddForce(glm::vec3(0, 100, 0));
 	}
 }
 

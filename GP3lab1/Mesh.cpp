@@ -37,6 +37,12 @@ void Mesh::SetUpAttrib(int index, int count, int type, size_t offset)
 }
 void Mesh::Bind()
 {
-	//TODO: don't bind mesh if it has already been bound
 	GL_ATTEMPT(glBindVertexArray(m_vao));
+}
+
+void Mesh::ClearBuffers()
+{
+	GL_ATTEMPT(glDeleteBuffers(1,&m_vao));
+	GL_ATTEMPT(glDeleteBuffers(1, &m_vbo));
+	GL_ATTEMPT(glDeleteBuffers(1, &m_ebo));
 }

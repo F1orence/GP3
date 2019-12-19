@@ -16,6 +16,7 @@ public:
 	void SetUpAttrib(int index, int count, int type, size_t offset);
 	void Bind();
 	int GetIndiciesCount() { return (int)m_indices.size(); }
+	void ClearBuffers();
 
 	//static GLuint* cb_vao; // currently bound vao
 };

@@ -7,32 +7,42 @@ void CameraComp::OnUpdate(float deltaTime)
 {
 	if (INPUT->GetKey(SDLK_w))
 	{
-		m_entity->GetTransform()->AddPosition(m_entity->GetTransform()->GetForward());
+		m_entity->GetTransform()->AddPosition(m_entity->GetTransform()->GetForward() * 10.0f * deltaTime);
 	}
 
 	if (INPUT->GetKey(SDLK_a))
 	{
-		m_entity->GetTransform()->AddPosition(-m_entity->GetTransform()->GetRight());
+		m_entity->GetTransform()->AddPosition(-m_entity->GetTransform()->GetRight() * 10.0f * deltaTime);
 	}
 
 	if (INPUT->GetKey(SDLK_d))
 	{
-		m_entity->GetTransform()->AddPosition(m_entity->GetTransform()->GetRight());
+		m_entity->GetTransform()->AddPosition(m_entity->GetTransform()->GetRight() * 10.0f * deltaTime);
 	}
 
 	if (INPUT->GetKey(SDLK_s))
 	{
-		m_entity->GetTransform()->AddPosition(-m_entity->GetTransform()->GetForward());
+		m_entity->GetTransform()->AddPosition(-m_entity->GetTransform()->GetForward() * 10.0f * deltaTime);
+	}
+
+	if (INPUT->GetKey(SDLK_q))
+	{
+		m_entity->GetTransform()->RotateEulerAxis(-10 * deltaTime, glm::vec3(0,1,0));
+	}
+
+	if (INPUT->GetKey(SDLK_e))
+	{
+		m_entity->GetTransform()->RotateEulerAxis(10 * deltaTime, glm::vec3(0, 1, 0));
 	}
 
 	if (INPUT->GetKey(SDLK_SPACE))
 	{
-		m_entity->GetTransform()->AddPosition(m_entity->GetTransform()->GetUp());
+		m_entity->GetTransform()->AddPosition(m_entity->GetTransform()->GetUp() * 10.0f * deltaTime);
 	}
 
 	if (INPUT->GetKey(SDLK_LCTRL))
 	{
-		m_entity->GetTransform()->AddPosition(-m_entity->GetTransform()->GetUp());
+		m_entity->GetTransform()->AddPosition(-m_entity->GetTransform()->GetUp() * 10.0f * deltaTime);
 	}
 }
 

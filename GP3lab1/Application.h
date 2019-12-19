@@ -67,6 +67,7 @@ private:
 	void Update(float deltaTime);
 	void Render();
 	void GameInit();
+	void PossessionUpdate();
 
 	glm::ivec2 deltaMousePos, oldMousePos, baseMousePos, mouseOffset, currMousePos;
 

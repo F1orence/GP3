@@ -42,10 +42,8 @@ void RigidBody::UpdateRigidBody()
 	m_rigidBody->getMotionState()->setWorldTransform(t);
 }
 
-void RigidBody::AddForce(glm::vec3 force) // this is horrible and needs to be reworked
+void RigidBody::AddForce(glm::vec3 force)
 {
-	//btVector3 tempVec = btVector3(0, 0, 0); // m_entity->GetTransform()->GetPosition().x, m_entity->GetTransform()->GetPosition().y, m_entity->GetTransform()->GetPosition().z);
-	//btVector3* tempPoint = &tempVec;
 	m_rigidBody->applyForce(btVector3(force.x, force.y, force.z), btVector3(0, 0, 0));
 
 }
@@ -74,7 +72,6 @@ void RigidBody::ToggleGravity()
 void RigidBody::ApplyDamping(float strength)
 {
 	m_rigidBody->setDamping(strength, strength);
-	std::cout << "dmop: " << m_rigidBody->getLinearDamping() << std::endl;
 	m_rigidBody->applyDamping(1);
 	m_rigidBody->setDamping(0, 0);
 }

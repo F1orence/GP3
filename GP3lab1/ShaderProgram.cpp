@@ -38,10 +38,10 @@ void ShaderProgram::Link()
 
 void ShaderProgram::Use()
 {
-	//if (currProgram != m_program)
-	//{
+	if (GL_CURRENT_PROGRAM != m_program)
+	{
 		glUseProgram(m_program);
-	//}
+	}
 }
 
 bool ShaderProgram::CheckForLinkErrors()
