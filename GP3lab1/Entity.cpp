@@ -29,3 +29,14 @@ void Entity::OnRender()
 	}
 }
 
+void Entity::DeleteComponents()
+{
+	delete &m_components;
+}
+
+
+//Entity::~Entity
+//{
+	//delete[] &m_components;
+//}
+

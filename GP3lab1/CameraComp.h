@@ -11,4 +11,5 @@ public:
 	virtual void OnUpdate(float deltaTime) override;
 	virtual void OnRender() override;
 	virtual void OnAttach() override;
+	glm::mat4 Get();
 };

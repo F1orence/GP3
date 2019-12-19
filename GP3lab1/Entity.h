@@ -12,6 +12,8 @@ private:
 
 public:
 	Entity();
+	~Entity();
+	void DeleteComponents();
 	void AddComponent(Component* c);
 	template<class T> void AddComponent();
 	template<class T> T* GetComponent();

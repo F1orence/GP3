@@ -8,7 +8,8 @@ private:
 	CollisionShape* m_shape;
 	btRigidBody* m_rigidBody;
 	btMotionState* m_mState = nullptr;
-	float mass;
+	float m_mass;
+	bool m_gravityEnabled = true;
 
 public:
 	virtual void OnUpdate(float deltaTime) override;
@@ -21,4 +22,6 @@ public:
 	virtual void AddForce(glm::vec3 force);
 	btRigidBody* Get() { return m_rigidBody; }
 	void RemoveIntertia();
+	void ToggleGravity();
+	void ApplyDamping(float strength);
 };

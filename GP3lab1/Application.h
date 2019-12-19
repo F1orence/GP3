@@ -7,6 +7,7 @@
 #define WINDOW_H Application::GetInstance()->GetWindowHeight()
 
 #include <Windows.h>
+#include "SceneLoader.h"
 
 enum AppState
 {
@@ -15,10 +16,16 @@ enum AppState
 
 enum EntityEnums
 {
-	NADA, CAM, DIR_LIGHT
+	POINT_LIGHT, DIR_LIGHT
+};
+
+enum TransformStates
+{
+	NONE, POS, ROT, SCALE
 };
 
 class Camera; //forward declaration
+//class SceneLoader;
 
 class Application
 {
@@ -31,15 +38,25 @@ private:
 	int m_windowHeight = 720;
 	AppState m_appState = AppState::INITILISING;
 	float m_worldDeltaTime = 0.f;
+	float scaleBounce = 0;
 
 	GLuint currVAO;
 
-	bool mouseSet, lookEnabled;
+	glm::vec4 mouseConstraints = glm::vec4(50, 50, -50, -50);
+	int mouseInt;
+	bool mouseSet, lookEnabled, isPossessing;
 	glm::vec3 lightDir, lightCol = glm::vec3(0.5f,0.5f,0.5f);
 	glm::mat4 m_uiVP;
 
+	Transform m_posessionTransform;
+
 	std::vector<Entity*> m_entities, m_UIentities;
 	Camera* m_mainCamera = nullptr;
+	Entity* m_camEntity;
+	Entity* m_targetEntity = NULL;
+	Entity* m_currEntity = NULL;
+
+	SceneLoader m_sceneLoader;
 
 	//private functions
 	Application();
@@ -51,10 +68,13 @@ private:
 	void Render();
 	void GameInit();
 
-	glm::ivec2 deltaMousePos, oldMousePos, baseMousePos;
+	glm::ivec2 deltaMousePos, oldMousePos, baseMousePos, mouseOffset, currMousePos;
 
+	glm::vec4 selectionCol = glm::vec4(0.9f,0.9f,0.9f,0.6f);
 
-	int debugMode;
+	glm::vec3 m_pointLightPos;
+
+	int debugMode, m_transformSelection;
 	enum DebugModes { DEBUG_ALL, DEBUG_ERRORS_ONLY, DEBUG_HIDE_ALL };
 
 public:
@@ -68,7 +88,15 @@ public:
 	inline Camera* GetCamera() { return m_mainCamera; }
 	inline glm::vec3 GetMainLight() { return lightDir; }
 	inline glm::vec3 GetAmbientColour() { return lightCol; }
+	inline glm::vec4 GetSelectionColour() { return selectionCol; }
+
 	inline glm::mat4 GetUICam() { return m_uiVP; }
 	void SetCamera(Camera* camera);
+
+	// getters for loading
+	inline std::vector<Entity*> GetEntities() { return m_entities; }
+	inline std::vector<Entity*> GetUIEntities() { return m_UIentities; }
+	inline Entity* GetCamEntity() { return m_camEntity; }
+
 
 };

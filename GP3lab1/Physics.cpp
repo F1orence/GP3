@@ -40,6 +40,11 @@ void Physics::Update(float deltaTime)
 
 void Physics::Quit()
 {
+	for (auto r : m_rbodies)
+	{
+		delete r;
+	}
+
 	delete m_world;
 	delete m_solver;
 	delete m_broadphase;

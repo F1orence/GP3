@@ -46,8 +46,7 @@ bool Input::LeftMousePressed(SDL_MouseButtonEvent& button)
 	return button.button == SDL_BUTTON_LEFT;
 }
 
-bool Input::LeftMouseReleased(SDL_MouseButtonEvent& button)
+bool Input::RightMousePressed(SDL_MouseButtonEvent& button)
 {
-	return button.button == SDL_BUTTON_LEFT;
-
+	return button.button == SDL_BUTTON_RIGHT;
 }
