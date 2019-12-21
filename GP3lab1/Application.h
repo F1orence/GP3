@@ -42,13 +42,15 @@ private:
 
 	GLuint currVAO;
 
-	glm::vec4 mouseConstraints = glm::vec4(50, 50, -50, -50);
-	int mouseInt;
+	//glm::vec4 mouseConstraints = glm::vec4(50, 50, -50, -50);
+	//int mouseInt;
 	bool mouseSet, lookEnabled, isPossessing;
 	glm::vec3 lightDir, lightCol = glm::vec3(0.5f,0.5f,0.5f);
 	glm::mat4 m_uiVP;
+	glm::vec4 selectionCol = glm::vec4(0.9f, 0.9f, 0.9f, 0.6f);
+	glm::vec3 m_pointLightPos;
 
-	Transform m_posessionTransform;
+	Transform m_possessionTransform;
 
 	std::vector<Entity*> m_entities, m_UIentities;
 	Camera* m_mainCamera = nullptr;
@@ -69,11 +71,8 @@ private:
 	void GameInit();
 	void PossessionUpdate();
 
-	glm::ivec2 deltaMousePos, oldMousePos, baseMousePos, mouseOffset, currMousePos;
+	glm::ivec2 deltaMousePos, oldMousePos; // baseMousePos, mouseOffset, currMousePos;
 
-	glm::vec4 selectionCol = glm::vec4(0.9f,0.9f,0.9f,0.6f);
-
-	glm::vec3 m_pointLightPos;
 
 	int debugMode, m_transformSelection;
 	enum DebugModes { DEBUG_ALL, DEBUG_ERRORS_ONLY, DEBUG_HIDE_ALL };

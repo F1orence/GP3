@@ -43,7 +43,7 @@ void Application::Init()
 
 	SDL_WarpMouseInWindow(m_window, m_windowWidth / 2, m_windowHeight / 2);
 	INPUT->ResetMouse();
-	baseMousePos = INPUT->GetMousePos();
+	//baseMousePos = INPUT->GetMousePos();
 	oldMousePos = glm::vec2(0, 0);
 
 	m_mainCamera->Recalculate();
@@ -87,10 +87,41 @@ void Application::OpenGlInit()
 
 }
 
+void Application::GameInit()
+{
+
+	m_camEntity = new Entity();
+	CameraComp* cc = new CameraComp();
+	m_camEntity->AddComponent(cc);
+	m_camEntity->GetTransform()->SetPosition(glm::vec3(0, 0, 100));
+
+	// load resources for the UI
+	Resources::GetInstance()->AddModel("sphere.obj");
+	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "UI_FRAG.glsl"), "UI");
+	Resources::GetInstance()->AddShader(new ShaderProgram(ASSET_PATH + "simple_VERT.glsl", ASSET_PATH + "oColor_FRAG.glsl"), "flatColour");
+	Resources::GetInstance()->AddTexture("mainText1.png");
+	Resources::GetInstance()->AddTexture("selectionText1.png");
+	Resources::GetInstance()->AddTexture("transformText1.png");
+	Resources::GetInstance()->AddTexture("possessionText1.png");
+
+	m_UIentities.push_back(new Entity());
+	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("UI"), Resources::GetInstance()->GetTexture("mainText1.png"), 2));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 1));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(3.6f, 2.0f, 2.0f));
+
+	m_UIentities.push_back(new Entity());
+	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("flatColour"), Resources::GetInstance()->GetTexture("mainText1.png")));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -101));
+	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
+
+	m_entities = m_sceneLoader.LoadScene(1);
+
+}
+
+
 void Application::Loop()
 {
 	
-
 	m_appState = AppState::RUNNING;
 	auto prevTicks = std::chrono::high_resolution_clock::now();
 	SDL_Event event;
@@ -108,6 +139,7 @@ void Application::Loop()
 				case SDL_WINDOWEVENT_CLOSE:
 					m_appState = AppState::QUITTING;
 					break;
+
 				case SDL_KEYDOWN:
 					INPUT->SetKey(event.key.keysym.sym, true);
 					break;
@@ -223,18 +255,17 @@ void Application::Loop()
 					{
 						if (m_targetEntity != NULL & lookEnabled)
 						{
-							isPossessing = false;
 							m_currEntity = m_targetEntity;
 						}
 						else
 						{
-							isPossessing = false;
 							m_currEntity = NULL;
 							m_UIentities[0]->GetComponent<MeshRenderer>()->GiveTexture(Resources::GetInstance()->GetTexture("mainText1.png"));
 							m_transformSelection = TransformStates::NONE;
 							selectionCol = glm::vec4(0.9f, 0.9f, 0.9f, 0.6f);
-
 						}
+
+						isPossessing = false;
 					}
 					
 				}
@@ -311,22 +342,8 @@ void Application::Loop()
 			}
 		}
 
-		if (isPossessing)
-		{
-			PossessionUpdate();
-		}
 		#pragma endregion
 		
-		
-		auto currentTicks = std::chrono::high_resolution_clock::now();
-		float deltaTime = (float)std::chrono::duration_cast<std::chrono::microseconds>(currentTicks - prevTicks).count() / 100000;
-		m_worldDeltaTime = deltaTime;
-		prevTicks = currentTicks;
-		
-		Physics::GetInstance()->Update(deltaTime);
-
-		lightDir = m_entities[DIR_LIGHT]->GetTransform()->GetForward();
-
 
 		if (lookEnabled)
 		{
@@ -361,16 +378,20 @@ void Application::Loop()
 					{
 						closest = val;
 
-						m_UIentities[1]->GetTransform()->SetPosition(a->GetTransform()->GetPosition());
-
 						m_targetEntity = a;
 					}
 
 				}
 
-				if (closest == 0)
-					m_UIentities[1]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() - m_camEntity->GetTransform()->GetForward());
+			}
 
+			if (closest == 0)
+			{
+				m_UIentities[1]->GetTransform()->SetPosition(m_camEntity->GetTransform()->GetPosition() - m_camEntity->GetTransform()->GetForward());
+			}
+			else
+			{
+				m_UIentities[1]->GetTransform()->SetPosition(m_targetEntity->GetTransform()->GetPosition());
 			}
 			#pragma endregion
 		}
@@ -555,7 +576,7 @@ void Application::Loop()
 		}
 		
 
-		#pragma region selection control
+		#pragma region selection graphic update
 		float selectionScale = ((m_camEntity->GetTransform()->GetPosition().x - m_UIentities[1]->GetTransform()->GetPosition().x) * (m_camEntity->GetTransform()->GetPosition().x - m_UIentities[1]->GetTransform()->GetPosition().x) +
 			(m_camEntity->GetTransform()->GetPosition().y - m_UIentities[1]->GetTransform()->GetPosition().y) * (m_camEntity->GetTransform()->GetPosition().y - m_UIentities[1]->GetTransform()->GetPosition().y) +
 			(m_camEntity->GetTransform()->GetPosition().z - m_UIentities[1]->GetTransform()->GetPosition().z) * (m_camEntity->GetTransform()->GetPosition().z - m_UIentities[1]->GetTransform()->GetPosition().z));
@@ -601,6 +622,14 @@ void Application::Loop()
 		}
 #pragma endregion
 
+		auto currentTicks = std::chrono::high_resolution_clock::now();
+		float deltaTime = (float)std::chrono::duration_cast<std::chrono::microseconds>(currentTicks - prevTicks).count() / 100000;
+		m_worldDeltaTime = deltaTime;
+		prevTicks = currentTicks;
+
+		Physics::GetInstance()->Update(deltaTime);
+
+		lightDir = m_entities[DIR_LIGHT]->GetTransform()->GetForward();
 
 		Update(deltaTime);
 		Render();
@@ -616,13 +645,19 @@ void Application::Loop()
 
 void Application::Quit()
 {
-	//Close SDL
+
 	Physics::GetInstance()->Quit();
 	for (auto& a : m_entities)
 	{
 		a->DeleteComponents();
 	}
 	m_entities.clear();
+
+	for (auto& a : m_UIentities)
+	{
+		a->DeleteComponents();
+	}
+	m_UIentities.clear();
 
 	SDL_GL_DeleteContext(m_glContext);
 	SDL_DestroyWindow(m_window);
@@ -644,34 +679,6 @@ Application* Application::GetInstance()
 	return m_application;
 }
 
-void Application::GameInit()
-{
-
-	m_camEntity = new Entity();
-	CameraComp* cc = new CameraComp();
-	m_camEntity->AddComponent(cc);
-	m_camEntity->GetTransform()->SetPosition(glm::vec3(0, 0, 100));
-
-	Resources::GetInstance()->AddTexture("mainText1.png");
-	Resources::GetInstance()->AddTexture("selectionText1.png");
-	Resources::GetInstance()->AddTexture("transformText1.png");
-	Resources::GetInstance()->AddTexture("possessionText1.png");
-
-	m_entities = m_sceneLoader.LoadScene(1);
-
-	oldMousePos = INPUT->GetMousePos();
-
-	m_UIentities.push_back(new Entity());
-	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(new Mesh(Quad::quadVertices, Quad::quadIndices), Resources::GetInstance()->GetShader("UI"), Resources::GetInstance()->GetTexture("mainText1.png"), 2));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, 1));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(3.6f, 2.0f, 2.0f));
-
-	m_UIentities.push_back(new Entity());
-	m_UIentities.at(m_UIentities.size() - 1)->AddComponent(new MeshRenderer(Resources::GetInstance()->GetModel("sphere.obj"), Resources::GetInstance()->GetShader("flatColour"), Resources::GetInstance()->GetTexture("mainText1.png")));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetPosition(glm::vec3(0, 0, -101));
-	m_UIentities.at(m_UIentities.size() - 1)->GetTransform()->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
-
-}
 
 void Application::Run()
 {
@@ -686,6 +693,10 @@ void Application::Update(float deltaTime)
 	{
 		m_camEntity->OnUpdate(deltaTime);
 	}
+	else
+	{
+		PossessionUpdate();
+	}
 
 	for (auto& a : m_entities)
 	{
@@ -695,6 +706,7 @@ void Application::Update(float deltaTime)
 	INPUT->Update();
 
 }
+
 void Application::Render()
 {
 	GL_ATTEMPT(glEnable(GL_DEPTH_TEST));
@@ -729,9 +741,9 @@ void Application::SetCamera(Camera* camera)
 void Application::PossessionUpdate()
 {
 	if (!lookEnabled)
-		m_camEntity->GetTransform()->SetRotation(m_posessionTransform.GetRotation());
+		m_camEntity->GetTransform()->SetRotation(m_possessionTransform.GetRotation());
 
-	m_camEntity->GetTransform()->SetPosition(m_currEntity->GetTransform()->GetPosition() + (glm::normalize(m_posessionTransform.GetUp()) * glm::vec3(3)) - (glm::normalize(m_posessionTransform.GetForward()) * glm::vec3(15)));
+	m_camEntity->GetTransform()->SetPosition(m_currEntity->GetTransform()->GetPosition() + (glm::normalize(m_possessionTransform.GetUp()) * glm::vec3(3)) - (glm::normalize(m_possessionTransform.GetForward()) * glm::vec3(15)));
 
 	if (INPUT->GetKey(SDLK_w))
 	{
@@ -741,12 +753,12 @@ void Application::PossessionUpdate()
 
 	if (INPUT->GetKey(SDLK_a))
 	{
-		m_posessionTransform.RotateEulerAxis(-10 * m_worldDeltaTime, m_posessionTransform.GetUp());
+		m_possessionTransform.RotateEulerAxis(-10 * m_worldDeltaTime, m_possessionTransform.GetUp());
 	}
 
 	if (INPUT->GetKey(SDLK_d))
 	{
-		m_posessionTransform.RotateEulerAxis(10 * m_worldDeltaTime, m_posessionTransform.GetUp());
+		m_possessionTransform.RotateEulerAxis(10 * m_worldDeltaTime, m_possessionTransform.GetUp());
 	}
 
 	if (INPUT->GetKey(SDLK_s))
